@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Psychologues - Nebras</title>
+    <title>Consultants - Nebras</title>
     <link rel="stylesheet" href="./css/patient_style.css">
     <link rel="icon" type="image/png" href="./assets/image/logo.png">
 </head>
@@ -92,8 +92,8 @@
         <div class="main-content">
             <header class="page-header">
                 <div>
-                    <h1>Psychologues</h1>
-                    <p class="breadcrumb">Accueil › Psychologues</p>
+                    <h1>Consultants</h1>
+                    <p class="breadcrumb">Accueil › Consultants</p>
                 </div>
             </header>
 
@@ -105,18 +105,74 @@
                 Mode URGENT activé - Appel immédiat
             </div>
 
-            <div class="search-section">
-                <div class="search-bar">
-                    <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
-                        <path
-                            d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zM10 14a4 4 0 110-8 4 4 0 010 8z"
-                            fill="currentColor" />
-                    </svg>
-                    <input type="text" placeholder="Rechercher par nom" id="searchInput" onkeyup="filterPsychologues()">
+            <!-- Filter Section -->
+            <div class="consultants-filter-section">
+                <!-- Row 1: Search + Urgent -->
+                <div class="filter-row-search">
+                    <div class="search-bar">
+                        <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zM10 14a4 4 0 110-8 4 4 0 010 8z" fill="currentColor"/>
+                        </svg>
+                        <input type="text" placeholder="Rechercher par nom" id="searchInput">
+                    </div>
+                    <button class="filter-button" id="urgentButton" onclick="openUrgentPayment()">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" fill="currentColor" stroke="none"/></svg>
+                        URGENT
+                    </button>
                 </div>
-                <button class="filter-button" id="urgentButton" onclick="openUrgentPayment()">
-                    <span class="button-text">URGENT</span>
-                </button>
+
+                <!-- Row 2: Main Type Filter (prominent) -->
+                <div class="type-filter-row">
+                    <span class="filter-section-label">Type de professionnel :</span>
+                    <div class="type-filter-tabs">
+                        <button class="type-filter-btn type-all active" id="typeAll" onclick="setTypeFilter('all')">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                            Tous
+                        </button>
+                        <button class="type-filter-btn type-psy" id="typePsy" onclick="setTypeFilter('psychologue')">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                            Psychologues
+                        </button>
+                        <button class="type-filter-btn type-counselor" id="typeCounselor" onclick="setTypeFilter('counselor')">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                            Conseillers
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Row 3: Secondary Filters -->
+                <div class="secondary-filters-row">
+                    <div class="secondary-filter-group">
+                        <label class="filter-label-small">Trier par</label>
+                        <select class="filter-select-small" id="sortFilter" onchange="filterPsychologues()">
+                            <option value="default">Par défaut</option>
+                            <option value="rating-desc">Meilleure note</option>
+                            <option value="sessions-desc">Plus expérimenté</option>
+                            <option value="price-asc">Prix croissant</option>
+                            <option value="price-desc">Prix décroissant</option>
+                        </select>
+                    </div>
+                    <div class="secondary-filter-group">
+                        <label class="filter-label-small">Note min.</label>
+                        <select class="filter-select-small" id="ratingFilter" onchange="filterPsychologues()">
+                            <option value="0">Toutes</option>
+                            <option value="3">★★★ 3+</option>
+                            <option value="4">★★★★ 4+</option>
+                            <option value="4.5">★★★★★ 4.5+</option>
+                        </select>
+                    </div>
+                    <div class="secondary-filter-group">
+                        <label class="filter-label-small">Disponibilité</label>
+                        <select class="filter-select-small" id="availFilter" onchange="filterPsychologues()">
+                            <option value="all">Tous</option>
+                            <option value="online">En ligne</option>
+                        </select>
+                    </div>
+                    <button class="reset-filters-btn" id="resetFiltersBtn" onclick="resetFilters()" style="display:none;">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+                        Réinitialiser
+                    </button>
+                </div>
             </div>
 
             <p class="result-count" id="resultCount">Chargement...</p>

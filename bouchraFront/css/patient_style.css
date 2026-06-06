@@ -1493,6 +1493,192 @@ body {
     margin-bottom: 20px;
 }
 
+/* ========== CONSULTANTS FILTER SECTION ========== */
+.consultants-filter-section {
+    background: white;
+    border-radius: 20px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(9, 19, 70, 0.06);
+    border: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.filter-row-search {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.filter-row-search .search-bar {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+/* Main type filter row */
+.type-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.filter-section-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #6b7280;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.type-filter-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.type-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 22px;
+    border-radius: 30px;
+    border: 2px solid #e5e7eb;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    background: #f9fafb;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+.type-filter-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* All - neutral dark */
+.type-filter-btn.type-all.active,
+.type-filter-btn.type-all:hover {
+    background: #091346;
+    color: white;
+    border-color: #091346;
+    box-shadow: 0 4px 14px rgba(9, 19, 70, 0.22);
+}
+
+/* Psychologue - teal/green */
+.type-filter-btn.type-psy.active,
+.type-filter-btn.type-psy:hover {
+    background: #44AA99;
+    color: white;
+    border-color: #44AA99;
+    box-shadow: 0 4px 14px rgba(68, 170, 153, 0.3);
+}
+
+/* Conseiller - orange */
+.type-filter-btn.type-counselor.active,
+.type-filter-btn.type-counselor:hover {
+    background: #e67e22;
+    color: white;
+    border-color: #e67e22;
+    box-shadow: 0 4px 14px rgba(230, 126, 34, 0.28);
+}
+
+/* Secondary filters row */
+.secondary-filters-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.secondary-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.filter-label-small {
+    font-size: 12px;
+    font-weight: 600;
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+.filter-select-small {
+    padding: 7px 12px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 13px;
+    background: #f9fafb;
+    color: #374151;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    font-weight: 500;
+    outline: none;
+    appearance: auto;
+}
+
+.filter-select-small:hover,
+.filter-select-small:focus {
+    border-color: #091346;
+    background: white;
+}
+
+.reset-filters-btn {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: #fee2e2;
+    color: #ef4444;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-left: auto;
+}
+
+.reset-filters-btn:hover {
+    background: #fecaca;
+}
+
+@media (max-width: 640px) {
+    .consultants-filter-section {
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .type-filter-btn {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+
+    .filter-section-label {
+        display: none;
+    }
+
+    .filter-label-small {
+        display: none;
+    }
+
+    .secondary-filters-row {
+        gap: 8px;
+    }
+
+    .filter-select-small {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+}
+
 .search-bar {
     flex: 1;
     display: flex;
