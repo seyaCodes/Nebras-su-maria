@@ -29,6 +29,7 @@
         setupFilters();
         setupTabs();
         highlightCurrentSidebarLink();
+        injectRatingModal();
 
         setInterval(() => {
             renderAppointments();
@@ -207,6 +208,12 @@
         </tr>`;
     }
 
+    function renderStars(rating) {
+        return [1,2,3,4,5].map(i =>
+            `<span style="color:${i <= rating ? '#f59e0b' : '#d1d5db'};font-size:14px;">★</span>`
+        ).join('');
+    }
+
     function renderHistoryRow(apt) {
         const statusClass = getStatusClass(apt.status);
         const statusText = getStatusText(apt.status);
@@ -214,6 +221,17 @@
         const mediaLabel = getMediaLabel(apt.mediaType);
         const dateStr = formatDate(apt.appointmentDate);
         const doctorName = apt.doctor?.fullname || 'Psychologue';
+        const doctorId = apt.doctor?.id || '';
+        const canRate = (apt.status === 'completed' || apt.status === 'confirmed');
+
+        let ratingCell;
+        if (apt.review) {
+            ratingCell = `<div style="display:flex;align-items:center;gap:4px;">${renderStars(apt.review.rating)}<span style="color:#888;font-size:12px;">${apt.review.rating}/5</span></div>`;
+        } else if (canRate) {
+            ratingCell = `<button class="action-btn" style="background:#7c3aed;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;" onclick="openRatingModal('${apt.id}','${doctorId}','${doctorName.replace(/'/g,"\\'")}')">Évaluer</button>`;
+        } else {
+            ratingCell = `<span style="color:#ccc;">-</span>`;
+        }
 
         return `
         <tr>
@@ -222,9 +240,103 @@
             <td><div style="display:flex;flex-direction:column;"><span>${dateStr}</span><span style="color:#888;font-size:12px;">${apt.appointmentTime}</span></div></td>
             <td style="color:#888;">${formatDate(apt.createdAt)}</td>
             <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-            <td style="color:#666;font-size:13px;">${apt.notes || '<span style="color:#ccc;">-</span>'}</td>
+            <td>${ratingCell}</td>
         </tr>`;
     }
+
+    function injectRatingModal() {
+        if (document.getElementById('rdvRatingModal')) return;
+        const modal = document.createElement('div');
+        modal.id = 'rdvRatingModal';
+        modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;';
+        modal.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:32px;width:90%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+            <h3 style="margin:0 0 4px;font-size:18px;color:#1a1a2e;" id="rdvRatingDoctorName"></h3>
+            <p style="margin:0 0 20px;color:#888;font-size:13px;">Comment s'est passée votre séance ?</p>
+            <div id="rdvStarPicker" style="display:flex;gap:8px;margin-bottom:16px;cursor:pointer;">
+                ${[1,2,3,4,5].map(i=>`<span data-star="${i}" style="font-size:32px;color:#d1d5db;transition:color .15s;">★</span>`).join('')}
+            </div>
+            <textarea id="rdvRatingComment" placeholder="Partagez votre expérience (optionnel)..." style="width:100%;box-sizing:border-box;height:90px;border:1px solid #e5e7eb;border-radius:8px;padding:10px;font-size:14px;resize:none;outline:none;font-family:inherit;"></textarea>
+            <div style="display:flex;gap:10px;margin-top:16px;">
+                <button onclick="closeRatingModal()" style="flex:1;padding:10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;cursor:pointer;font-size:14px;color:#666;">Annuler</button>
+                <button id="rdvRatingSubmit" onclick="submitRating()" disabled style="flex:1;padding:10px;border:none;border-radius:8px;background:#d1d5db;cursor:not-allowed;font-size:14px;color:#fff;font-weight:600;transition:background .15s;">Envoyer</button>
+            </div>
+        </div>`;
+        document.body.appendChild(modal);
+
+        let selectedRating = 0;
+        const stars = modal.querySelectorAll('[data-star]');
+        const submitBtn = document.getElementById('rdvRatingSubmit');
+
+        function highlightStars(n) {
+            stars.forEach(s => {
+                s.style.color = Number(s.dataset.star) <= n ? '#f59e0b' : '#d1d5db';
+            });
+        }
+
+        stars.forEach(star => {
+            star.addEventListener('mouseenter', () => highlightStars(Number(star.dataset.star)));
+            star.addEventListener('mouseleave', () => highlightStars(selectedRating));
+            star.addEventListener('click', () => {
+                selectedRating = Number(star.dataset.star);
+                highlightStars(selectedRating);
+                submitBtn.disabled = false;
+                submitBtn.style.background = '#7c3aed';
+                submitBtn.style.cursor = 'pointer';
+            });
+        });
+
+        modal._getSelectedRating = () => selectedRating;
+        modal._resetRating = () => {
+            selectedRating = 0;
+            highlightStars(0);
+            submitBtn.disabled = true;
+            submitBtn.style.background = '#d1d5db';
+            submitBtn.style.cursor = 'not-allowed';
+        };
+    }
+
+    let _ratingAptId = null;
+    let _ratingDoctorId = null;
+
+    window.openRatingModal = function(appointmentId, doctorId, doctorName) {
+        injectRatingModal();
+        _ratingAptId = appointmentId;
+        _ratingDoctorId = doctorId;
+        const modal = document.getElementById('rdvRatingModal');
+        document.getElementById('rdvRatingDoctorName').textContent = doctorName;
+        document.getElementById('rdvRatingComment').value = '';
+        modal._resetRating();
+        modal.style.display = 'flex';
+    };
+
+    window.closeRatingModal = function() {
+        const modal = document.getElementById('rdvRatingModal');
+        if (modal) modal.style.display = 'none';
+    };
+
+    window.submitRating = async function() {
+        const modal = document.getElementById('rdvRatingModal');
+        const rating = modal._getSelectedRating();
+        const comment = document.getElementById('rdvRatingComment').value.trim();
+        const btn = document.getElementById('rdvRatingSubmit');
+
+        if (!rating) return;
+
+        btn.textContent = 'Envoi...';
+        btn.disabled = true;
+
+        try {
+            await reviewAPI.create({ doctorId: _ratingDoctorId, appointmentId: _ratingAptId, rating, comment: comment || undefined });
+            modal.style.display = 'none';
+            showToast('Merci pour votre évaluation !', 'success');
+            await loadAppointments();
+        } catch (e) {
+            showToast('Erreur: ' + e.message, 'error');
+            btn.textContent = 'Envoyer';
+            btn.disabled = false;
+        }
+    };
 
     function getStatusClass(status) {
         const classes = {

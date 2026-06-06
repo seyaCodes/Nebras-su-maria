@@ -157,6 +157,9 @@
                     <button class="tab-btn" onclick="showTab('statut')">
                         Statut en ligne
                     </button>
+                    <button class="tab-btn" onclick="showTab('avis')">
+                        Avis patients
+                    </button>
                     <button class="tab-btn" onclick="showTab('securite')">
                         Sécurité
                     </button>
@@ -209,7 +212,16 @@
                     </div>
                 </div>
 
-                <!-- TAB 3 - Statut en ligne -->
+                <!-- TAB 3 - Avis patients -->
+                <div id="tabAvis" class="profile-tab-content">
+                    <div class="profile-section">
+                        <h3>Avis de mes patients</h3>
+                        <div id="reviewsSummary" style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding:16px;background:#f8f7ff;border-radius:12px;"></div>
+                        <div id="reviewsList"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 4 - Statut en ligne -->
                 <div id="tabStatut" class="profile-tab-content">
                     <div class="profile-section">
                         <h3>Statut en ligne</h3>

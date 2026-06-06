@@ -75,4 +75,22 @@ exports.createReview = asyncHandler(async (req, res) => {
   res.status(201).json({ message: '\u00c9valuation enregistr\u00e9e', review });
 });
 
+exports.getDoctorReviews = asyncHandler(async (req, res) => {
+  const { doctorId } = req.params;
+
+  const reviews = await prisma.review.findMany({
+    where: { doctorId },
+    select: {
+      id: true,
+      rating: true,
+      comment: true,
+      createdAt: true,
+      patient: { select: { fullname: true } }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  res.json({ reviews });
+});
+
 module.exports.recalculateDoctorRating = recalculateDoctorRating;
