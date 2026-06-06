@@ -17,7 +17,8 @@
     let urgentActif = false;
     let doctorCache = new Map();
     let urgentTargetDoctorId = null;
-    let urgentSelectedTab = 'psychologue'; // ← add here at top
+    let urgentSelectedTab = 'psychologue';
+    let activeTypeFilter = 'all';
 
     const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
     const BOOKING_TIME_GROUPS = [
@@ -883,33 +884,90 @@
         document.body.style.overflow = 'auto';
     }
 
+    function setTypeFilter(type) {
+        activeTypeFilter = type;
+        document.getElementById('typeAll')?.classList.toggle('active', type === 'all');
+        document.getElementById('typePsy')?.classList.toggle('active', type === 'psychologue');
+        document.getElementById('typeCounselor')?.classList.toggle('active', type === 'counselor');
+        filterPsychologues();
+    }
+
+    function resetFilters() {
+        activeTypeFilter = 'all';
+        const searchEl = document.getElementById('searchInput');
+        const sortEl = document.getElementById('sortFilter');
+        const ratingEl = document.getElementById('ratingFilter');
+        const availEl = document.getElementById('availFilter');
+        if (searchEl) searchEl.value = '';
+        if (sortEl) sortEl.value = 'default';
+        if (ratingEl) ratingEl.value = '0';
+        if (availEl) availEl.value = 'all';
+        document.getElementById('typeAll')?.classList.add('active');
+        document.getElementById('typePsy')?.classList.remove('active');
+        document.getElementById('typeCounselor')?.classList.remove('active');
+        const resetBtn = document.getElementById('resetFiltersBtn');
+        if (resetBtn) resetBtn.style.display = 'none';
+        filterPsychologues();
+    }
+
     function filterPsychologues() {
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        const cards = document.querySelectorAll('.psy-card');
-        let visibleCount = 0;
+        const searchTerm = (document.getElementById('searchInput')?.value || '').toLowerCase();
+        const sortValue = document.getElementById('sortFilter')?.value || 'default';
+        const minRating = parseFloat(document.getElementById('ratingFilter')?.value || '0');
+        const availValue = document.getElementById('availFilter')?.value || 'all';
 
-        cards.forEach(card => {
-            const name = card.getAttribute('data-name') || '';
-            const isOnline = card.getAttribute('data-online') === 'true';
+        const hasActiveFilter = searchTerm || sortValue !== 'default' || minRating > 0 || availValue !== 'all' || activeTypeFilter !== 'all';
+        const resetBtn = document.getElementById('resetFiltersBtn');
+        if (resetBtn) resetBtn.style.display = hasActiveFilter ? 'flex' : 'none';
 
-            let showBySearch = name.includes(searchTerm);
-            let showByUrgent = !urgentActif || (urgentActif && isOnline);
+        let filtered = [...doctors];
 
-            if (showBySearch && showByUrgent) {
-                card.style.display = 'block';
-                visibleCount++;
-            } else {
-                card.style.display = 'none';
-            }
-        });
+        if (activeTypeFilter !== 'all') {
+            filtered = filtered.filter(d => {
+                const role = d.role || d.userType || '';
+                return activeTypeFilter === 'psychologue' ? role === 'psychologue' : role === 'counselor';
+            });
+        }
 
-        const resultCount = document.getElementById('resultCount');
         if (urgentActif) {
-            resultCount.innerHTML = `${visibleCount} professionnel${visibleCount > 1 ? 's' : ''} EN LIGNE disponible${visibleCount > 1 ? 's' : ''} pour appel immédiat`;
-        } else {
-            resultCount.innerHTML = `${visibleCount} professionnel${visibleCount > 1 ? 's' : ''} correspondent à votre recherche`;
+            filtered = filtered.filter(d => d.isAvailable);
+        }
+
+        if (searchTerm) {
+            filtered = filtered.filter(d => (d.fullname || '').toLowerCase().includes(searchTerm));
+        }
+
+        if (minRating > 0) {
+            filtered = filtered.filter(d => (d.rating || 0) >= minRating);
+        }
+
+        if (availValue === 'online') {
+            filtered = filtered.filter(d => d.isAvailable);
+        }
+
+        if (sortValue === 'rating-desc') {
+            filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        } else if (sortValue === 'sessions-desc') {
+            filtered.sort((a, b) => (b.sessionsCompleted || 0) - (a.sessionsCompleted || 0));
+        } else if (sortValue === 'price-asc') {
+            filtered.sort((a, b) => (a.tarif || 0) - (b.tarif || 0));
+        } else if (sortValue === 'price-desc') {
+            filtered.sort((a, b) => (b.tarif || 0) - (a.tarif || 0));
+        }
+
+        renderDoctors(filtered);
+
+        const resultEl = document.getElementById('resultCount');
+        if (resultEl) {
+            const total = filtered.length;
+            if (urgentActif) {
+                resultEl.innerHTML = `${total} consultant${total > 1 ? 's' : ''} EN LIGNE disponible${total > 1 ? 's' : ''} pour appel immédiat`;
+            } else {
+                resultEl.innerHTML = `${total} consultant${total > 1 ? 's' : ''} trouvé${total > 1 ? 's' : ''}`;
+            }
         }
     }
+
     function toggleUrgentFilter() {
         urgentActif = !urgentActif;
         const btn = document.getElementById('urgentButton');
@@ -923,6 +981,8 @@
         filterPsychologues();
     }
     window.toggleUrgentFilter = toggleUrgentFilter;
+    window.setTypeFilter = setTypeFilter;
+    window.resetFilters = resetFilters;
 
 
 
