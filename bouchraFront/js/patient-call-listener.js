@@ -162,6 +162,27 @@
                 window.dispatchEvent(new CustomEvent('grouptherapy:data-changed', { detail: data }));
             });
 
+            // Doctor accepted urgent request — patient must pay
+            sessionSocket.on('paymentRequired', (data) => {
+                console.log('Payment required:', data);
+                showUrgentPaymentModal(data);
+            });
+
+            // Payment confirmed — call is ready for both sides
+            sessionSocket.on('callReady', (data) => {
+                console.log('Call ready:', data);
+                hideUrgentPaymentModal();
+                if (typeof showToast === 'function') {
+                    showToast('Paiement confirmé ! L\'appel démarre...', 'success');
+                }
+                checkCallStatus();
+                setTimeout(function () {
+                    if (data.appointmentId) {
+                        window.location.href = 'video-call.html?room=' + data.roomId + '&appointment=' + data.appointmentId + '&type=patient';
+                    }
+                }, 1500);
+            });
+
             sessionSocket.on('disconnect', () => {
                 console.log('Session socket disconnected');
                 startCallPolling();
@@ -375,6 +396,87 @@
         if (invite) invite.remove();
         if (pill) pill.remove();
     };
+
+    // ========== URGENT PAYMENT MODAL ==========
+    function showUrgentPaymentModal(data) {
+        hideUrgentPaymentModal();
+
+        const safeDoctorName = (data.doctorName || 'le praticien').replace(/[<>&"]/g, function (c) {
+            return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c];
+        });
+
+        const modal = document.createElement('div');
+        modal.id = 'urgentPaymentModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;';
+        modal.innerHTML = `
+            <div style="background:#fff;border-radius:16px;padding:32px;max-width:420px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <h2 style="margin:0 0 8px;color:#1a1a2e;font-size:1.3rem;">Consultation acceptée !</h2>
+                <p style="color:#555;margin:0 0 20px;font-size:0.95rem;">
+                    <strong>${safeDoctorName}</strong> a accepté votre demande.
+                    Veuillez régler la consultation via CCP pour démarrer l'appel.
+                </p>
+                <div style="background:#f8f0ff;border:2px solid #7c3aed;border-radius:10px;padding:16px;margin-bottom:20px;text-align:center;">
+                    <div style="font-size:0.85rem;color:#7c3aed;font-weight:600;margin-bottom:4px;">MONTANT À RÉGLER</div>
+                    <div style="font-size:2rem;font-weight:800;color:#1a1a2e;">${data.amount || 2000} <span style="font-size:1rem;">DA</span></div>
+                </div>
+                <div style="background:#fff8e1;border-radius:8px;padding:12px;margin-bottom:20px;font-size:0.85rem;color:#b45309;">
+                    <strong>CCP Nebras :</strong> 123 456 789 — Clé 78<br>
+                    Indiquez votre numéro de référence CCP ci-dessous.
+                </div>
+                <input id="urgentCcpInput" type="text" placeholder="N° référence CCP (ex: CCP-123456)"
+                    style="width:100%;box-sizing:border-box;padding:12px;border:2px solid #e2e8f0;border-radius:8px;font-size:1rem;margin-bottom:16px;outline:none;"
+                    onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e2e8f0'" />
+                <button id="urgentPayBtn"
+                    style="width:100%;padding:14px;background:#7c3aed;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;transition:background 0.2s;"
+                    onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'">
+                    Confirmer le paiement &amp; démarrer l'appel
+                </button>
+                <button id="urgentPayCancelBtn"
+                    style="width:100%;padding:10px;background:transparent;color:#888;border:none;font-size:0.9rem;cursor:pointer;margin-top:8px;">
+                    Annuler
+                </button>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        document.getElementById('urgentPayBtn').addEventListener('click', async function () {
+            const ccpInput = document.getElementById('urgentCcpInput');
+            const ccp = ccpInput ? ccpInput.value.trim() : '';
+            const btn = document.getElementById('urgentPayBtn');
+
+            btn.disabled = true;
+            btn.textContent = 'Traitement...';
+
+            try {
+                const result = await appointmentAPI.payUrgent(data.urgentId, ccp);
+                if (typeof showToast === 'function') {
+                    showToast('Paiement enregistré ! L\'appel va démarrer.', 'success');
+                }
+                hideUrgentPaymentModal();
+                if (result && result.roomId) {
+                    setTimeout(function () {
+                        window.location.href = 'video-call.html?room=' + result.roomId + '&appointment=' + result.appointment.id + '&type=patient';
+                    }, 1500);
+                }
+            } catch (err) {
+                btn.disabled = false;
+                btn.textContent = 'Confirmer le paiement & démarrer l\'appel';
+                if (typeof showToast === 'function') {
+                    showToast(err.message || 'Erreur lors du paiement', 'error');
+                }
+            }
+        });
+
+        document.getElementById('urgentPayCancelBtn').addEventListener('click', function () {
+            hideUrgentPaymentModal();
+        });
+    }
+
+    function hideUrgentPaymentModal() {
+        const modal = document.getElementById('urgentPaymentModal');
+        if (modal) modal.remove();
+    }
 
     window.joinDoctorCall = async function () {
         try {

@@ -2467,6 +2467,42 @@ body {
     fill: currentColor;
 }
 
+.urgent-consult-btn {
+    padding: 16px 24px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    background: #7c3aed;
+    color: white;
+    width: 100%;
+    justify-content: center;
+}
+
+.urgent-consult-btn:hover {
+    background: #6d28d9;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(124, 58, 237, 0.4);
+}
+
+.urgent-consult-btn:disabled {
+    background: #a78bfa;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.urgent-consult-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
 /* Avis Empty State */
 .avis-empty {
     text-align: center;

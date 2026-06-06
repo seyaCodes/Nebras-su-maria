@@ -895,14 +895,11 @@
 
     function resetFilters() {
         activeTypeFilter = 'all';
-        const searchEl = document.getElementById('searchInput');
-        const sortEl = document.getElementById('sortFilter');
-        const ratingEl = document.getElementById('ratingFilter');
-        const availEl = document.getElementById('availFilter');
-        if (searchEl) searchEl.value = '';
-        if (sortEl) sortEl.value = 'default';
-        if (ratingEl) ratingEl.value = '0';
-        if (availEl) availEl.value = 'all';
+        const defaults = { searchInput: '', sortFilter: 'default', ratingFilter: '0', dateFilter: 'all', availFilter: 'all' };
+        Object.entries(defaults).forEach(([id, val]) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val;
+        });
         document.getElementById('typeAll')?.classList.add('active');
         document.getElementById('typePsy')?.classList.remove('active');
         document.getElementById('typeCounselor')?.classList.remove('active');
@@ -915,9 +912,10 @@
         const searchTerm = (document.getElementById('searchInput')?.value || '').toLowerCase();
         const sortValue = document.getElementById('sortFilter')?.value || 'default';
         const minRating = parseFloat(document.getElementById('ratingFilter')?.value || '0');
+        const dateValue = document.getElementById('dateFilter')?.value || 'all';
         const availValue = document.getElementById('availFilter')?.value || 'all';
 
-        const hasActiveFilter = searchTerm || sortValue !== 'default' || minRating > 0 || availValue !== 'all' || activeTypeFilter !== 'all';
+        const hasActiveFilter = searchTerm || sortValue !== 'default' || minRating > 0 || dateValue !== 'all' || availValue !== 'all' || activeTypeFilter !== 'all';
         const resetBtn = document.getElementById('resetFiltersBtn');
         if (resetBtn) resetBtn.style.display = hasActiveFilter ? 'flex' : 'none';
 
@@ -940,6 +938,13 @@
 
         if (minRating > 0) {
             filtered = filtered.filter(d => (d.rating || 0) >= minRating);
+        }
+
+        if (dateValue !== 'all') {
+            const day = parseInt(dateValue, 10);
+            filtered = filtered.filter(d =>
+                Array.isArray(d.availableSlots) && d.availableSlots.some(s => s.dayOfWeek === day)
+            );
         }
 
         if (availValue === 'online') {
@@ -1309,11 +1314,33 @@
         }
     }
 
+    async function requestUrgentForDoctor() {
+        if (!selectedDoctor) return;
+
+        if (!selectedDoctor.isAvailable) {
+            if (typeof showToast === 'function') showToast('Ce praticien n\'est pas disponible en ce moment', 'error');
+            return;
+        }
+
+        const btn = document.querySelector('.urgent-consult-btn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Envoi...'; }
+
+        try {
+            await appointmentAPI.createUrgent(selectedDoctor.id, 'Consultation urgente immédiate');
+            if (typeof showToast === 'function') showToast('Demande envoyée ! En attente de réponse du praticien...', 'info');
+            if (btn) { btn.textContent = 'Demande envoyée...'; }
+        } catch (err) {
+            if (typeof showToast === 'function') showToast(err.message || 'Erreur lors de l\'envoi de la demande', 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/></svg>Consultation Urgente'; }
+        }
+    }
+
     window.viewDoctor = viewDoctor;
     window.closePsyDetail = closePsyDetail;
     window.bookAppointment = openBookingModal;
     window.contactDoctor = contactDoctor;
     window.openBookingModal = openBookingModal;
+    window.requestUrgentForDoctor = requestUrgentForDoctor;
     window.closeBookingModal = closeBookingModal;
     window.confirmBooking = confirmBooking;
     window.filterPsychologues = filterPsychologues;

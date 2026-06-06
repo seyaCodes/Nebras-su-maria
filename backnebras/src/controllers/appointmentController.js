@@ -571,7 +571,7 @@ exports.acceptUrgentRequest = asyncHandler(async (req, res) => {
   const existingCall = await prisma.urgentRequest.findFirst({
     where: {
       id,
-      status: { in: ['in_call', 'rejected'] }
+      status: { in: ['in_call', 'accepted', 'rejected'] }
     }
   });
 
@@ -579,13 +579,22 @@ exports.acceptUrgentRequest = asyncHandler(async (req, res) => {
     return res.status(400).json({
       error: existingCall.status === 'in_call'
         ? 'Ce patient est déjà en consultation'
+        : existingCall.status === 'accepted'
+        ? 'Cette demande est déjà acceptée, en attente du paiement'
         : 'Cette demande a été annulée'
     });
   }
 
+  // Fetch doctor's tarif from profile
+  const doctorProfile = await prisma.profile.findUnique({
+    where: { userId: doctorId },
+    select: { tarif: true }
+  });
+  const tarif = doctorProfile?.tarif || 2000;
+
   const urgentRequest = await prisma.urgentRequest.update({
     where: { id },
-    data: { status: 'in_call' },
+    data: { status: 'accepted', amount: tarif },
     include: {
       patient: { select: { fullname: true, email: true, id: true } },
       doctor: { select: { fullname: true, id: true } }
@@ -618,38 +627,111 @@ exports.acceptUrgentRequest = asyncHandler(async (req, res) => {
         });
       }
     });
+
+    // Notify patient: payment required
+    global.io.to(`user:${urgentRequest.patientId}`).emit('paymentRequired', {
+      urgentId: id,
+      amount: tarif,
+      doctorName: urgentRequest.doctor?.fullname || 'le praticien',
+      doctorId: doctorId
+    });
+  }
+
+  res.json({
+    message: 'Demande acceptée — en attente du paiement patient',
+    urgentRequest,
+    amount: tarif
+  });
+});
+
+// ============================================
+// PAY URGENT REQUEST (Patient) — triggers call
+// ============================================
+exports.payUrgentRequest = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const patientId = req.user.id;
+  const { ccpNumber } = req.body;
+
+  const urgentRequest = await prisma.urgentRequest.findFirst({
+    where: { id, patientId, status: 'accepted' },
+    include: {
+      patient: { select: { fullname: true, id: true } },
+      doctor: { select: { fullname: true, id: true } }
+    }
+  });
+
+  if (!urgentRequest) {
+    return res.status(404).json({ error: 'Demande introuvable ou statut invalide' });
   }
 
   const appointmentDate = urgentRequest.appointmentDate || new Date();
   const appointmentTime = urgentRequest.appointmentTime || new Date().toTimeString().slice(0, 5);
 
-  const appointment = await prisma.appointment.create({
+  // Create transaction (pending admin validation)
+  const transaction = await prisma.transaction.create({
     data: {
-      patientId: urgentRequest.patientId,
-      doctorId: doctorId,
-      appointmentDate: appointmentDate,
-      appointmentTime: appointmentTime,
-      mediaType: 'video',
-      status: 'in_call',
-      notes: 'URGENT VIP - ' + (urgentRequest.notes || 'Created from urgent request')
+      userId: patientId,
+      type: 'consultation',
+      amount: urgentRequest.amount,
+      reference: ccpNumber || null,
+      status: 'pending',
+      notes: `Consultation urgente avec ${urgentRequest.doctor?.fullname || 'praticien'}`
     }
   });
 
+  // Create the appointment and start the call
+  const appointment = await prisma.appointment.create({
+    data: {
+      patientId,
+      doctorId: urgentRequest.doctorId,
+      appointmentDate,
+      appointmentTime,
+      mediaType: 'video',
+      status: 'in_call',
+      notes: 'URGENT VIP - ' + (urgentRequest.notes || 'Consultation urgente')
+    }
+  });
+
+  // Link transaction to appointment
+  await prisma.transaction.update({
+    where: { id: transaction.id },
+    data: { appointmentId: appointment.id }
+  });
+
+  // Mark urgent request as in_call
+  await prisma.urgentRequest.update({
+    where: { id },
+    data: { status: 'in_call' }
+  });
+
+  const roomId = appointment.id;
+
   if (global.io) {
-    global.io.to(`user:${urgentRequest.patientId}`).emit('callAccepted', {
-      urgentId: id,
-      appointmentId: appointment.id,
-      providerName: urgentRequest.doctor?.fullname || 'Provider',
-      appointmentTime: appointmentTime,
-      roomId: appointment.id
+    const callPayload = { urgentId: id, appointmentId: appointment.id, roomId };
+
+    // callAccepted keeps existing patient UI (toast + polling)
+    global.io.to(`user:${patientId}`).emit('callAccepted', {
+      ...callPayload,
+      providerName: urgentRequest.doctor?.fullname || 'Praticien',
+      appointmentTime
+    });
+
+    // callReady = explicit signal for both sides to join
+    global.io.to(`user:${patientId}`).emit('callReady', {
+      ...callPayload,
+      doctorName: urgentRequest.doctor?.fullname || 'Praticien'
+    });
+    global.io.to(`user:${urgentRequest.doctorId}`).emit('callReady', {
+      ...callPayload,
+      patientName: urgentRequest.patient?.fullname || 'Patient'
     });
   }
 
   res.json({
-    message: 'Urgent VIP request accepted - starting video call',
-    urgentRequest,
+    message: 'Paiement enregistré — consultation démarrée',
     appointment,
-    startCall: true
+    transaction,
+    roomId
   });
 });
 

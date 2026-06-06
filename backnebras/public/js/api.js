@@ -281,6 +281,13 @@ const appointmentAPI = {
     });
   },
 
+  payUrgent: async (requestId, ccpNumber) => {
+    return fetchAPI(`/appointments/urgent/${requestId}/pay`, {
+      method: 'PUT',
+      body: JSON.stringify({ ccpNumber })
+    });
+  },
+
   // Urgent Access (7-day)
   getUrgentAccessStatus: async () => {
     return fetchAPI('/appointments/urgent/access');

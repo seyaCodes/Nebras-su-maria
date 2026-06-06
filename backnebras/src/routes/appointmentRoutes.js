@@ -18,6 +18,7 @@ router.post('/urgent', appointmentController.createUrgentRequest);
 router.get('/urgent', appointmentController.getUrgentRequests);
 router.put('/urgent/:id/accept', appointmentController.acceptUrgentRequest);
 router.put('/urgent/:id/reject', appointmentController.rejectUrgentRequest);
+router.put('/urgent/:id/pay', appointmentController.payUrgentRequest);
 // Call state routes (real-time sync)
 router.post('/call/start', appointmentController.startCallState);
 router.post('/call/end', appointmentController.endCallState);

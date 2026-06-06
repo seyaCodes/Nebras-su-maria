@@ -22,12 +22,24 @@
         await loadUrgentRequests();
         highlightCurrentSidebarLink();
 
-        // Listen for urgent request cancellations
+        // Listen for real-time urgent request events
         if (typeof connectMessagingSocket === 'function') {
             const socket = connectMessagingSocket();
             if (socket) {
                 socket.on('urgentRequestCancelled', function (data) {
                     loadUrgentRequests();
+                });
+                socket.on('urgentRequestCreated', function (data) {
+                    loadUrgentRequests();
+                    if (typeof showToast === 'function') {
+                        showToast('Nouvelle demande de consultation urgente !', 'info');
+                    }
+                });
+                socket.on('callReady', function (data) {
+                    if (typeof showToast === 'function') {
+                        showToast('Le patient a payé — vous pouvez rejoindre l\'appel !', 'success');
+                    }
+                    showDoctorCallReadyBanner(data);
                 });
             }
         }
@@ -929,6 +941,34 @@
             dropdown.classList.remove('show');
         }
     });
+    function showDoctorCallReadyBanner(data) {
+        const existing = document.getElementById('doctorCallReadyBanner');
+        if (existing) existing.remove();
+
+        const safePatientName = (data.patientName || 'Patient').replace(/[<>&"]/g, function (c) {
+            return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c];
+        });
+
+        const banner = document.createElement('div');
+        banner.id = 'doctorCallReadyBanner';
+        banner.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#7c3aed;color:#fff;border-radius:14px;padding:18px 22px;z-index:9000;box-shadow:0 8px 30px rgba(124,58,237,0.4);max-width:320px;';
+        banner.innerHTML = `
+            <div style="font-weight:700;font-size:1rem;margin-bottom:6px;">Appel prêt !</div>
+            <div style="font-size:0.88rem;opacity:0.9;margin-bottom:14px;">${safePatientName} a payé et attend l'appel.</div>
+            <div style="display:flex;gap:10px;">
+                <button onclick="window.location.href='video-call.html?room=${data.roomId || data.appointmentId}&appointment=${data.appointmentId}&type=doctor'"
+                    style="flex:1;padding:10px;background:#fff;color:#7c3aed;border:none;border-radius:8px;font-weight:700;cursor:pointer;">
+                    Rejoindre
+                </button>
+                <button onclick="document.getElementById('doctorCallReadyBanner').remove()"
+                    style="padding:10px 14px;background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;cursor:pointer;">
+                    ✕
+                </button>
+            </div>
+        `;
+        document.body.appendChild(banner);
+    }
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initDashboard);
     } else {
