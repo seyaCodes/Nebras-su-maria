@@ -10,7 +10,7 @@ if (typeof window.API_URL === 'undefined') {
   (function () {
     var hostname = window.location.hostname;
     var isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-    var apiUrl = isLocalhost ? 'http://localhost:3000' : 'https://backnebras.onrender.com';
+    var apiUrl = isLocalhost ? 'http://localhost:3000' : '';
 
     window.APP_CONFIG = window.APP_CONFIG || {};
     window.APP_CONFIG.apiUrl = apiUrl;
