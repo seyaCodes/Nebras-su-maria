@@ -480,6 +480,7 @@
 
     function renderDetailPanel(doctor, isPartial) {
         selectedDoctor = doctor;
+        _reviewsLoadedFor = null;
 
         const avatarImg = document.querySelector('.psy-detail-avatar');
         const avatarDefault = document.querySelector('.psy-detail-avatar-default');
@@ -1221,6 +1222,79 @@
         }
     }
 
+    function renderStarsDetail(rating) {
+        return [1,2,3,4,5].map(i =>
+            `<span style="color:${i <= rating ? '#f59e0b' : '#d1d5db'};font-size:15px;">★</span>`
+        ).join('');
+    }
+
+    let _reviewsLoadedFor = null;
+
+    async function loadDetailReviews() {
+        if (!selectedDoctor) return;
+        const container = document.getElementById('avisContent');
+        if (!container) return;
+
+        if (_reviewsLoadedFor === selectedDoctor.id) return;
+        _reviewsLoadedFor = selectedDoctor.id;
+
+        container.innerHTML = '<p style="color:#888;font-size:13px;padding:16px 0;">Chargement...</p>';
+
+        try {
+            const { reviews } = await reviewAPI.getForDoctor(selectedDoctor.id);
+
+            if (!reviews || reviews.length === 0) {
+                container.innerHTML = '<div class="avis-empty"><p>Aucun avis disponible pour le moment.</p></div>';
+                return;
+            }
+
+            const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+            const dist = [5,4,3,2,1].map(n => ({ n, count: reviews.filter(r => r.rating === n).length }));
+
+            container.innerHTML = `
+                <div style="display:flex;align-items:center;gap:14px;padding:14px;background:#f8f7ff;border-radius:10px;margin-bottom:16px;">
+                    <div style="text-align:center;min-width:64px;">
+                        <div style="font-size:34px;font-weight:700;color:#1a1a2e;line-height:1;">${avg.toFixed(1)}</div>
+                        <div style="margin:3px 0;">${renderStarsDetail(Math.round(avg))}</div>
+                        <div style="color:#888;font-size:11px;">${reviews.length} avis</div>
+                    </div>
+                    <div style="flex:1;">
+                        ${dist.map(d => `
+                        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+                            <span style="color:#888;font-size:11px;width:10px;">${d.n}</span>
+                            <span style="color:#f59e0b;font-size:11px;">★</span>
+                            <div style="flex:1;height:5px;background:#e5e7eb;border-radius:3px;">
+                                <div style="height:100%;background:#f59e0b;width:${reviews.length ? (d.count/reviews.length*100) : 0}%;border-radius:3px;"></div>
+                            </div>
+                            <span style="color:#888;font-size:11px;width:14px;">${d.count}</span>
+                        </div>`).join('')}
+                    </div>
+                </div>
+                <div>
+                ${reviews.map(r => {
+                    const name = r.patient?.fullname || 'Patient';
+                    const initial = name.charAt(0).toUpperCase();
+                    const date = new Date(r.createdAt).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' });
+                    return `
+                    <div style="border-bottom:1px solid #f0f0f0;padding:12px 0;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                            <div style="width:30px;height:30px;border-radius:50%;background:#7c3aed;color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex-shrink:0;">${initial}</div>
+                            <div style="flex:1;">
+                                <div style="font-weight:600;font-size:13px;color:#1a1a2e;">${name}</div>
+                                <div style="font-size:11px;color:#888;">${date}</div>
+                            </div>
+                            <div>${renderStarsDetail(r.rating)}</div>
+                        </div>
+                        ${r.comment ? `<p style="margin:0;font-size:12px;color:#555;line-height:1.5;padding-left:38px;">${r.comment}</p>` : ''}
+                    </div>`;
+                }).join('')}
+                </div>`;
+        } catch (e) {
+            container.innerHTML = '<div class="avis-empty"><p>Impossible de charger les avis.</p></div>';
+            _reviewsLoadedFor = null;
+        }
+    }
+
     function switchTab(tab) {
         document.querySelectorAll('.tab-detail-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -1231,6 +1305,7 @@
         } else {
             document.querySelector('.tab-detail-btn:last-child').classList.add('active');
             document.getElementById('avisContent').classList.add('active');
+            loadDetailReviews();
         }
     }
 
