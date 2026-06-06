@@ -960,13 +960,13 @@
 
         const banner = document.createElement('div');
         banner.id = 'doctorCallReadyBanner';
-        banner.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#7c3aed;color:#fff;border-radius:14px;padding:18px 22px;z-index:9000;box-shadow:0 8px 30px rgba(124,58,237,0.4);max-width:320px;';
+        banner.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#091346;color:#fff;border-radius:14px;padding:18px 22px;z-index:9000;box-shadow:0 8px 30px rgba(9,19,70,0.4);max-width:320px;';
         banner.innerHTML = `
             <div style="font-weight:700;font-size:1rem;margin-bottom:6px;">Appel prêt !</div>
             <div style="font-size:0.88rem;opacity:0.9;margin-bottom:14px;">${safePatientName} a payé et attend l'appel.</div>
             <div style="display:flex;gap:10px;">
                 <button onclick="window.location.href='video-call.html?room=${data.roomId || data.appointmentId}&appointment=${data.appointmentId}&type=doctor'"
-                    style="flex:1;padding:10px;background:#fff;color:#7c3aed;border:none;border-radius:8px;font-weight:700;cursor:pointer;">
+                    style="flex:1;padding:10px;background:#fff;color:#091346;border:none;border-radius:8px;font-weight:700;cursor:pointer;">
                     Rejoindre
                 </button>
                 <button onclick="document.getElementById('doctorCallReadyBanner').remove()"

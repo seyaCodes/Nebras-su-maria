@@ -690,7 +690,7 @@
                 return `
                 <div style="border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:12px;">
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-                        <div style="width:36px;height:36px;border-radius:50%;background:#7c3aed;color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0;">${initial}</div>
+                        <div style="width:36px;height:36px;border-radius:50%;background:#091346;color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0;">${initial}</div>
                         <div style="flex:1;">
                             <div style="font-weight:600;font-size:14px;color:#1a1a2e;">${name}</div>
                             <div style="font-size:12px;color:#888;">${date}</div>

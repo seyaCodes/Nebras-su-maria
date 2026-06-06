@@ -2478,20 +2478,20 @@ body {
     align-items: center;
     gap: 8px;
     transition: all 0.3s ease;
-    background: #7c3aed;
+    background: #091346;
     color: white;
     width: 100%;
     justify-content: center;
 }
 
 .urgent-consult-btn:hover {
-    background: #6d28d9;
+    background: #0d1d5e;
     transform: translateY(-2px);
     box-shadow: 0 5px 20px rgba(124, 58, 237, 0.4);
 }
 
 .urgent-consult-btn:disabled {
-    background: #a78bfa;
+    background: #4a5c8a;
     cursor: not-allowed;
     transform: none;
 }

@@ -228,7 +228,7 @@
         if (apt.review) {
             ratingCell = `<div style="display:flex;align-items:center;gap:4px;">${renderStars(apt.review.rating)}<span style="color:#888;font-size:12px;">${apt.review.rating}/5</span></div>`;
         } else if (canRate) {
-            ratingCell = `<button class="action-btn" style="background:#7c3aed;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;" onclick="openRatingModal('${apt.id}','${doctorId}','${doctorName.replace(/'/g,"\\'")}')">Évaluer</button>`;
+            ratingCell = `<button class="action-btn" style="background:#091346;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;" onclick="openRatingModal('${apt.id}','${doctorId}','${doctorName.replace(/'/g,"\\'")}')">Évaluer</button>`;
         } else {
             ratingCell = `<span style="color:#ccc;">-</span>`;
         }
@@ -281,7 +281,7 @@
                 selectedRating = Number(star.dataset.star);
                 highlightStars(selectedRating);
                 submitBtn.disabled = false;
-                submitBtn.style.background = '#7c3aed';
+                submitBtn.style.background = '#091346';
                 submitBtn.style.cursor = 'pointer';
             });
         });

@@ -447,8 +447,8 @@
                     <strong>${safeDoctorName}</strong> a accepté votre demande.
                     Veuillez régler la consultation via CCP pour démarrer l'appel.
                 </p>
-                <div style="background:#f8f0ff;border:2px solid #7c3aed;border-radius:10px;padding:16px;margin-bottom:20px;text-align:center;">
-                    <div style="font-size:0.85rem;color:#7c3aed;font-weight:600;margin-bottom:4px;">MONTANT À RÉGLER</div>
+                <div style="background:#eef0f8;border:2px solid #091346;border-radius:10px;padding:16px;margin-bottom:20px;text-align:center;">
+                    <div style="font-size:0.85rem;color:#091346;font-weight:600;margin-bottom:4px;">MONTANT À RÉGLER</div>
                     <div style="font-size:2rem;font-weight:800;color:#1a1a2e;">${data.amount || 2000} <span style="font-size:1rem;">DA</span></div>
                 </div>
                 <div style="background:#fff8e1;border-radius:8px;padding:12px;margin-bottom:20px;font-size:0.85rem;color:#b45309;">
@@ -457,10 +457,10 @@
                 </div>
                 <input id="urgentCcpInput" type="text" placeholder="N° référence CCP (ex: CCP-123456)"
                     style="width:100%;box-sizing:border-box;padding:12px;border:2px solid #e2e8f0;border-radius:8px;font-size:1rem;margin-bottom:16px;outline:none;"
-                    onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e2e8f0'" />
+                    onfocus="this.style.borderColor='#091346'" onblur="this.style.borderColor='#e2e8f0'" />
                 <button id="urgentPayBtn"
-                    style="width:100%;padding:14px;background:#7c3aed;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;transition:background 0.2s;"
-                    onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'">
+                    style="width:100%;padding:14px;background:#091346;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;transition:background 0.2s;"
+                    onmouseover="this.style.background='#0d1d5e'" onmouseout="this.style.background='#091346'">
                     Confirmer le paiement &amp; démarrer l'appel
                 </button>
                 <button id="urgentPayCancelBtn"

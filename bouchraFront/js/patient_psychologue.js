@@ -1283,7 +1283,7 @@
                     return `
                     <div style="border-bottom:1px solid #f0f0f0;padding:12px 0;">
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                            <div style="width:30px;height:30px;border-radius:50%;background:#7c3aed;color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex-shrink:0;">${initial}</div>
+                            <div style="width:30px;height:30px;border-radius:50%;background:#091346;color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex-shrink:0;">${initial}</div>
                             <div style="flex:1;">
                                 <div style="font-weight:600;font-size:13px;color:#1a1a2e;">${name}</div>
                                 <div style="font-size:11px;color:#888;">${date}</div>
