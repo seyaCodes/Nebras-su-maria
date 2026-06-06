@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics VIP - Nebras</title>
+    <link rel="stylesheet" href="./css/psychologue_style.css">
+    <link rel="icon" type="image/png" href="./assets/image/logo.png">
+    <style>
+        .analytics-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .an-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 32px;
+            border: 1px solid #e8ecf4;
+        }
+
+        .an-card h2 {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #44AA99;
+            margin: 0 0 20px 0;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f4f8;
+        }
+
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+        }
+
+        .kpi-item {
+            padding: 8px 24px 8px 0;
+            border-right: 1px solid #f0f4f8;
+        }
+
+        .kpi-item:last-child {
+            border-right: none;
+            padding-right: 0;
+            padding-left: 24px;
+        }
+
+        .kpi-item:not(:first-child):not(:last-child) {
+            padding-left: 24px;
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: #091346;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .kpi-value.gold {
+            color: #c5b4e4;
+        }
+
+        .kpi-stars {
+            font-size: 15px;
+            color: #c5b4e4;
+            margin-top: 4px;
+            letter-spacing: 1px;
+        }
+
+        .chart-wide {
+            width: 100%;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            height: 160px;
+            padding: 0;
+        }
+
+        .chart-bar-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            height: 100%;
+            justify-content: flex-end;
+        }
+
+        .chart-bar-group .bar-val {
+            font-size: 11px;
+            font-weight: 700;
+            color: #091346;
+        }
+
+        .chart-bar-group .bar-fill {
+            width: 100%;
+            border-radius: 6px 6px 0 0;
+            min-height: 4px;
+        }
+
+        .chart-bar-group .bar-label {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .hbar-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .hbar-item {
+            display: grid;
+            grid-template-columns: 44px 1fr 28px;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hbar-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: #091346;
+            text-align: right;
+        }
+
+        .hbar-track {
+            background: #f0f4f8;
+            border-radius: 4px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .hbar-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .hbar-count {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .chart-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* VIP Gate */
+        .vip-gate {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            text-align: center;
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e8ecf4;
+        }
+
+        .vip-gate h2 {
+            margin: 20px 0 10px;
+            color: #091346;
+            font-size: 22px;
+        }
+
+        .vip-gate p {
+            color: #64748b;
+            max-width: 380px;
+            line-height: 1.6;
+        }
+
+        .vip-gate a {
+            margin-top: 24px;
+            background: #c5b4e4;
+            color: white;
+            padding: 13px 28px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
+            display: inline-block;
+        }
+
+        @media (max-width: 700px) {
+            .kpi-row {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .chart-grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .an-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="sidebar">
+            <div class="logo">
+                <img src="./assets/image/logo.png" alt="Nebras Logo">
+            </div>
+            <nav class="nav-menu">
+                <a href="psychologue_dashboard.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor" />
+                    </svg>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="psychologue_mes_patients.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"
+                            fill="currentColor" />
+                    </svg>
+                    <span>Mes patients</span>
+                    <span class="badge">0</span>
+                </a>
+                <a href="psychologue_emploi_du_temps.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"
+                            fill="currentColor" />
+                    </svg>
+                    <span>Emploi du temps</span>
+                </a>
+                <a href="psychologue_messagerie.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"
+                            fill="currentColor" />
+                    </svg>
+                    <span>Messagerie</span>
+                    <span class="badge">0</span>
+                </a>
+                <a href="psychologue_honoraires.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.5 15h-3v-2h3v2zm0-4h-3V7h3v6z"
+                            fill="currentColor" />
+                    </svg>
+                    <span>Honoraires</span>
+                </a>
+                <a href="psychologue_groupes.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"
+                            fill="currentColor" />
+                    </svg>
+                    <span>Thérapie de groupe</span>
+                </a>
+                <a href="psychologue_VIP.html" class="nav-item vip-link" onclick="checkVIPStatus(event)">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15 9 22 9 16 14 19 22 12 17 5 22 8 14 2 9 9 9 12 2" />
+                    </svg>
+                    <span>Espace VIP</span>
+                    <span class="vip-status-badge" id="vipStatusBadge">Non activé</span>
+                </a>
+                <a href="psychologue_analytics.html" class="nav-item" id="analyticsNavItem">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 20V10M12 20V4M6 20v-6" />
+                    </svg>
+                    <span>Analytics</span>
+                    <span
+                        style="background:#c5b4e4;color:white;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:4px;">VIP</span>
+                </a>
+            </nav>
+
+            <!-- Profile + Settings + Logout -->
+            <div class="nav-item profile-link" style="display:flex;align-items:center;gap:8px;cursor:default;">
+                <a href="psychologue_profil.html"
+                    style="display:flex;align-items:center;gap:8px;flex:1;text-decoration:none;color:inherit;min-width:0;">
+                    <div class="user-avatar" id="sidebarAvatar"></div>
+                    <div class="user-info" style="min-width:0;overflow:hidden;">
+                        <span class="user-name" id="sidebarUserName"
+                            style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Dr.</span>
+                    </div>
+                </a>
+                <a href="psychologue_profil.html" title="Paramètres"
+                    style="display:flex;align-items:center;justify-content:center;padding:6px;border-radius:8px;background:rgba(255,255,255,0.1);flex-shrink:0;text-decoration:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="18" height="18">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H5.78a1.65 1.65 0 0 0-1.51 1 1.65 1.65 0 0 0 .33 1.82l.08.1A10 10 0 0 0 12 18a10 10 0 0 0 6.33-2.2z" />
+                    </svg>
+                </a>
+                <a href="#" onclick="logout()" title="Déconnexion"
+                    style="display:flex;align-items:center;justify-content:center;padding:6px;border-radius:8px;background:rgba(231,76,60,0.15);flex-shrink:0;text-decoration:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" width="18" height="18">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16,17 21,12 16,7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT — outside sidebar -->
+        <div class="main-content">
+            <header class="page-header">
+                <div>
+                    <h1>Analytics <span
+                            style="background:#c5b4e4;color:white;font-size:13px;padding:3px 10px;border-radius:20px;margin-left:8px;vertical-align:middle;">VIP</span>
+                    </h1>
+                    <p class="breadcrumb">Accueil › Analytics</p>
+                </div>
+            </header>
+
+            <!-- VIP Gate (shown when not VIP) -->
+            <div id="vipWarning" class="vip-gate">
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#c5b4e4" stroke-width="1.5">
+                    <path
+                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                <h2>Fonctionnalité VIP</h2>
+                <p>Les analytics avancées sont réservées aux praticiens VIP. Activez votre abonnement pour accéder à vos
+                    données.</p>
+                <a href="#" onclick="openVipPaymentModal(); return false;">Activer VIP</a>
+            </div>
+
+            <!-- Analytics Content (shown when VIP) -->
+            <div id="analyticsContent">
+                <div class="analytics-wrap">
+
+                    <!-- Sessions -->
+                    <div class="an-card">
+                        <h2>Sessions</h2>
+                        <div class="kpi-row">
+                            <div class="kpi-item">
+                                <div class="kpi-label">Total</div>
+                                <div class="kpi-value" id="kpiTotalSessions">—</div>
+                            </div>
+                            <div class="kpi-item">
+                                <div class="kpi-label">Ce mois</div>
+                                <div class="kpi-value" id="kpiSessionsThisMonth">—</div>
+                            </div>
+                            <div class="kpi-item">
+                                <div class="kpi-label">Moy / semaine</div>
+                                <div class="kpi-value" id="kpiAvgPerWeek">—</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:24px;">
+                            <div class="chart-wide" id="sessionsChart"></div>
+                        </div>
+                    </div>
+
+                    <!-- Patients -->
+                    <div class="an-card">
+                        <h2>Patients</h2>
+                        <div class="kpi-row">
+                            <div class="kpi-item">
+                                <div class="kpi-label">Total</div>
+                                <div class="kpi-value" id="kpiTotalPatients">—</div>
+                            </div>
+                            <div class="kpi-item">
+                                <div class="kpi-label">Nouveaux ce mois</div>
+                                <div class="kpi-value" id="kpiNewPatients">—</div>
+                            </div>
+                            <div class="kpi-item">
+                                <div class="kpi-label">Rétention</div>
+                                <div class="kpi-value" id="kpiRetention">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Revenus -->
+                    <div class="an-card">
+                        <h2>Revenus</h2>
+                        <div class="kpi-row">
+                            <div class="kpi-item">
+                                <div class="kpi-label">Total</div>
+                                <div class="kpi-value" id="kpiTotalRevenue">—</div>
+                            </div>
+                            <div class="kpi-item">
+                                <div class="kpi-label">Ce mois</div>
+                                <div class="kpi-value" id="kpiRevenueThisMonth">—</div>
+                            </div>
+                            <div class="kpi-item">
+                                <div class="kpi-label">Tarif / session</div>
+                                <div class="kpi-value" id="kpiTarif">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Évaluations -->
+                    <div class="an-card">
+                        <h2>Évaluations</h2>
+                        <div class="kpi-row">
+                            <div class="kpi-item">
+                                <div class="kpi-label">Note moyenne</div>
+                                <div class="kpi-value gold" id="kpiAvgRating">—</div>
+                                <div class="kpi-stars" id="kpiStars"></div>
+                            </div>
+                            <div class="kpi-item">
+                                <div class="kpi-label">Total avis</div>
+                                <div class="kpi-value" id="kpiTotalReviews">—</div>
+                            </div>
+                            <div class="kpi-item">
+                                <div class="kpi-label">Évolution</div>
+                                <div class="chart-wide" id="ratingChart" style="height:80px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Disponibilité -->
+                    <div class="an-card">
+                        <h2>Disponibilité</h2>
+                        <div class="kpi-row">
+                            <div class="kpi-item">
+                                <div class="kpi-label">Créneaux total</div>
+                                <div class="kpi-value" id="kpiTotalSlots">—</div>
+                            </div>
+                            <div class="kpi-item">
+                                <div class="kpi-label">Réservés</div>
+                                <div class="kpi-value" id="kpiBookedSlots">—</div>
+                            </div>
+                            <div class="kpi-item">
+                                <div class="kpi-label">Taux d'occupation</div>
+                                <div class="kpi-value" id="kpiOccupancy">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Jours & Heures -->
+                    <div class="chart-grid-2">
+                        <div class="an-card">
+                            <h2>Jours les plus actifs</h2>
+                            <div class="hbar-list" id="busiestDaysChart"></div>
+                        </div>
+                        <div class="an-card">
+                            <h2>Heures les plus actives</h2>
+                            <div class="hbar-list" id="busiestHoursChart"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /.container -->
+
+    <script src="js/router.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/shared/doctor-analytics.js" defer></script>
+</body>
+
+</html>

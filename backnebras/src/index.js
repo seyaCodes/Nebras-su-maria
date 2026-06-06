@@ -85,7 +85,7 @@ initVideoSignaling(io, app);
 // ============================================
 // SERVE FRONTEND STATIC FILES
 // ============================================
-app.use(express.static(path.join(__dirname, "../../bouchraFront")));
+app.use(express.static(path.join(__dirname, "../../public")));
 // ============================================
 // API ROUTES
 // ============================================
