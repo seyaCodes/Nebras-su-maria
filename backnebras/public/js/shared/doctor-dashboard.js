@@ -752,29 +752,38 @@
     }
 
     async function acceptUrgentRequest(requestId) {
+        // Disable the button to prevent double-clicks
+        const btn = document.querySelector(`.btn-accept[onclick*="${requestId}"]`);
+        if (btn) { btn.disabled = true; btn.textContent = 'Acceptation...'; }
+
         try {
             const result = await appointmentAPI.acceptUrgent(requestId);
 
+            // Legacy flow: backend created appointment directly (old code)
             if (result.appointment) {
                 currentVideoAppointment = {
                     id: result.appointment.id,
-                    patientName: result.urgentRequest.patient?.fullname || 'Patient',
-                    patientId: result.urgentRequest.patient?.id
+                    patientName: result.urgentRequest?.patient?.fullname || 'Patient',
+                    patientId: result.urgentRequest?.patient?.id
                 };
                 showVideoCallUI({
                     id: result.appointment.id,
-                    patientName: result.urgentRequest.patient?.fullname || 'Patient',
-                    patientId: result.urgentRequest.patient?.id,
-                    appointmentTime: result.urgentRequest.appointmentTime || 'Maintenant'
+                    patientName: result.urgentRequest?.patient?.fullname || 'Patient',
+                    patientId: result.urgentRequest?.patient?.id,
+                    appointmentTime: result.urgentRequest?.appointmentTime || 'Maintenant'
                 });
                 showToast('Appel vidéo démarré immédiatement!', 'success');
+            } else {
+                // New flow: waiting for patient payment
+                showToast('Demande acceptée — en attente du paiement patient', 'success');
             }
 
             await loadUrgentRequests();
             await loadDashboardData();
         } catch (error) {
             console.error('Error accepting urgent request:', error);
-            showToast('Erreur lors de l\'acceptation', 'error');
+            showToast(error.message || 'Erreur lors de l\'acceptation', 'error');
+            if (btn) { btn.disabled = false; btn.textContent = '✓ Accepter'; }
         }
     }
 
