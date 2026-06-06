@@ -1,4 +1,4 @@
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID } = require('crypto');
 
 const rooms = new Map();
 let ioInstance = null;
@@ -20,7 +20,7 @@ function initVideoSignaling(io, app) {
     const { name, mode } = req.body;
     if (!name || !mode) return res.status(400).json({ error: 'Name and mode required' });
 
-    const id = uuidv4().split('-')[0];
+    const id = randomUUID().split('-')[0];
     rooms.set(id, {
       id, name, mode,
       participants: new Map(),
