@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compte en attente - Nebras</title>
+    <link rel="icon" type="image/png" href="./assets/image/logo.png">
+    <style>
+        :root {
+            --primary-green: #44AA99;
+            --primary-beige: #FAF7F2;
+            --primary-dark: #091346;
+            --primary-purple: #B39DDB;
+            --text-dark: #333;
+            --text-light: #666;
+            --border-color: #E8EDF5;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: var(--primary-beige);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Animated background dots */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(68, 170, 153, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(9, 19, 70, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(179, 157, 219, 0.05) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .pending-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 560px;
+        }
+
+        /* Logo */
+        .logo-top {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-top img {
+            height: 52px;
+            object-fit: contain;
+        }
+
+        /* Main card */
+        .pending-card {
+            background: white;
+            border-radius: 24px;
+            padding: 48px 44px;
+            box-shadow: 0 8px 40px rgba(9, 19, 70, 0.10);
+            border: 1px solid var(--border-color);
+            text-align: center;
+            animation: cardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Icon */
+        .status-icon-wrap {
+            width: 88px;
+            height: 88px;
+            margin: 0 auto 28px;
+            position: relative;
+        }
+
+        .status-icon-circle {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e8f4ee 0%, #d4eee8 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulseRing 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseRing {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(68, 170, 153, 0.35);
+            }
+
+            50% {
+                box-shadow: 0 0 0 14px rgba(68, 170, 153, 0);
+            }
+        }
+
+        .status-icon-circle svg {
+            width: 42px;
+            height: 42px;
+            color: var(--primary-green);
+        }
+
+        /* Badge pill */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(68, 170, 153, 0.12);
+            color: var(--primary-green);
+            border: 1px solid rgba(68, 170, 153, 0.25);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .badge-dot {
+            width: 7px;
+            height: 7px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            animation: blink 1.4s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        /* Text */
+        .pending-card h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 14px;
+            line-height: 1.3;
+        }
+
+        .pending-card .lead {
+            font-size: 15px;
+            color: var(--text-light);
+            line-height: 1.7;
+            margin-bottom: 32px;
+        }
+
+        /* Steps */
+        .steps-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 36px;
+            text-align: left;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            background: #f8f9fb;
+            border-radius: 12px;
+            padding: 14px 16px;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.2s;
+        }
+
+        .step-item:hover {
+            border-color: rgba(68, 170, 153, 0.3);
+        }
+
+        .step-num {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--primary-dark);
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .step-item.done .step-num {
+            background: var(--primary-green);
+        }
+
+        .step-text strong {
+            display: block;
+            font-size: 14px;
+            color: var(--primary-dark);
+            margin-bottom: 3px;
+            font-weight: 600;
+        }
+
+        .step-text span {
+            font-size: 13px;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        /* Info box */
+        .info-box {
+            background: #e8f4ee;
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            text-align: left;
+            margin-bottom: 32px;
+        }
+
+        .info-box svg {
+            color: var(--primary-green);
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .info-box p {
+            font-size: 13px;
+            color: #2e7d6b;
+            line-height: 1.6;
+        }
+
+        /* Buttons */
+        .btn-logout {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-dark);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-logout:hover {
+            background: #0d1a5a;
+            transform: translateY(-1px);
+        }
+
+        .btn-logout:active {
+            transform: translateY(0);
+        }
+
+        .btn-refresh {
+            width: 100%;
+            margin-top: 12px;
+            padding: 12px;
+            background: transparent;
+            color: var(--text-light);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .btn-refresh:hover {
+            background: var(--primary-beige);
+            color: var(--text-dark);
+            border-color: var(--primary-green);
+        }
+
+        /* Footer */
+        .pending-footer {
+            text-align: center;
+            margin-top: 28px;
+            color: #aaa;
+            font-size: 13px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .pending-footer a {
+            color: var(--primary-green);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .pending-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Rejected / Suspended variant */
+        .rejected-card .status-icon-circle {
+            background: linear-gradient(135deg, #fde8e8 0%, #fdd4d4 100%);
+        }
+
+        .rejected-card .status-icon-circle svg {
+            color: #e74c3c;
+        }
+
+        @keyframes pulseRingRed {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 0 14px rgba(231, 76, 60, 0);
+            }
+        }
+
+        .rejected-card .status-icon-circle {
+            animation: pulseRingRed 2.5s ease-in-out infinite;
+        }
+
+        .rejected-card .status-badge {
+            background: rgba(231, 76, 60, 0.10);
+            color: #e74c3c;
+            border-color: rgba(231, 76, 60, 0.25);
+        }
+
+        .rejected-card .badge-dot {
+            background: #e74c3c;
+        }
+
+        .rejected-card .info-box {
+            background: #fde8e8;
+        }
+
+        .rejected-card .info-box svg {
+            color: #e74c3c;
+        }
+
+        .rejected-card .info-box p {
+            color: #a93226;
+        }
+
+        /* Spinner on refresh */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinning {
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .pending-card {
+                padding: 32px 24px;
+            }
+
+            .pending-card h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="pending-wrapper">
+
+        <!-- Logo -->
+        <div class="logo-top">
+            <img src="./assets/image/logo.png" alt="Nebras Logo" onerror="this.style.display='none'">
+        </div>
+
+        <!-- Card (JS will toggle .rejected-card if status is rejected/suspended) -->
+        <div class="pending-card" id="pendingCard">
+
+            <div class="status-icon-wrap">
+                <div class="status-icon-circle" id="statusIconCircle">
+                    <!-- Pending icon: hourglass -->
+                    <svg id="statusIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path
+                            d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12M7 22v-4.172a2 2 0 0 1 .586-1.414L12 12M17 2v4.172a2 2 0 0 1-.586 1.414L12 12M7 2v4.172a2 2 0 0 0 .586 1.414L12 12" />
+                    </svg>
+                </div>
+            </div>
+
+            <div class="status-badge">
+                <span class="badge-dot" id="badgeDot"></span>
+                <span id="badgeText">En attente de validation</span>
+            </div>
+
+            <h1 id="cardTitle">Votre compte est en cours de vérification</h1>
+
+            <p class="lead" id="cardLead">
+                Merci pour votre inscription sur <strong>Nebras</strong>. Notre équipe examine actuellement votre
+                dossier.
+                Vous recevrez une notification dès que votre compte sera activé.
+            </p>
+
+            <!-- Steps -->
+            <div class="steps-list" id="stepsList">
+                <div class="step-item done">
+                    <div class="step-num">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="3">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                    </div>
+                    <div class="step-text">
+                        <strong>Inscription effectuée</strong>
+                        <span>Votre compte a été créé avec succès.</span>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">2</div>
+                    <div class="step-text">
+                        <strong>Vérification du dossier</strong>
+                        <span>Notre équipe vérifie vos informations et qualifications professionnelles.</span>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">3</div>
+                    <div class="step-text">
+                        <strong>Activation du compte</strong>
+                        <span>Une fois validé, vous aurez accès à votre espace professionnel.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info note -->
+            <div class="info-box" id="infoBox">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <p id="infoText">Le délai de traitement est généralement de <strong>24 à 48 heures</strong> ouvrées. Si
+                    vous avez des questions, contactez-nous à <strong>support@nebras.dz</strong></p>
+            </div>
+
+            <!-- Buttons -->
+            <button class="btn-refresh" onclick="checkStatus()" id="refreshBtn">
+                <svg id="refreshIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                </svg>
+                Vérifier l'état de mon compte
+            </button>
+
+            <button class="btn-logout" onclick="handleLogout()">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16,17 21,12 16,7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Se déconnecter
+            </button>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="pending-footer">
+            <p>&copy; <span id="footerYear"></span> Nebras — Psychologie en ligne &nbsp;·&nbsp; <a
+                    href="home.html">Accueil</a> &nbsp;·&nbsp; <a href="rule.html">Règles</a></p>
+        </div>
+
+    </div>
+
+    <script>
+        document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+        // ── Read stored user status ──────────────────────────────────────────────
+        const user = JSON.parse(localStorage.getItem('nebras_user') || '{}');
+        const status = user.status || 'pending';
+
+        // If somehow active, redirect immediately
+        if (status === 'active') {
+            redirectByRole(user.userType);
+        }
+
+        // Adapt UI for rejected / suspended
+        if (status === 'rejected' || status === 'suspended') {
+            applyRejectedUI(status);
+        }
+
+        function applyRejectedUI(s) {
+            document.getElementById('pendingCard').classList.add('rejected-card');
+
+            // Icon: X mark
+            document.getElementById('statusIcon').innerHTML = `
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+        `;
+
+            document.getElementById('badgeText').textContent =
+                s === 'suspended' ? 'Compte suspendu' : 'Compte rejeté';
+
+            document.getElementById('cardTitle').textContent =
+                s === 'suspended'
+                    ? 'Votre compte a été suspendu'
+                    : 'Votre demande a été refusée';
+
+            document.getElementById('cardLead').innerHTML =
+                s === 'suspended'
+                    ? 'Votre compte a été temporairement suspendu par l\'administration. Veuillez contacter notre support pour plus d\'informations.'
+                    : 'Votre dossier n\'a pas pu être validé. Cela peut être dû à des informations manquantes ou incorrectes.';
+
+            document.getElementById('stepsList').style.display = 'none';
+
+            document.getElementById('infoText').innerHTML =
+                'Pour toute question, contactez-nous à <strong>support@nebras.dz</strong> en précisant votre adresse email d\'inscription.';
+
+            document.getElementById('refreshBtn').style.display = 'none';
+        }
+
+        // ── Check status via backend ─────────────────────────────────────────────
+        async function checkStatus() {
+            const icon = document.getElementById('refreshIcon');
+            icon.classList.add('spinning');
+
+            try {
+                const token = localStorage.getItem('nebras_token');
+                if (!token) { handleLogout(); return; }
+
+                const res = await fetch('/api/auth/me', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                icon.classList.remove('spinning');
+
+                if (!data.user) { handleLogout(); return; }
+
+                // Update localStorage
+                localStorage.setItem('nebras_user', JSON.stringify(data.user));
+
+                if (data.user.status === 'active') {
+                    redirectByRole(data.user.userType);
+                } else if (data.user.status === 'rejected' || data.user.status === 'suspended') {
+                    applyRejectedUI(data.user.status);
+                } else {
+                    showToast('Votre dossier est toujours en cours de traitement.');
+                }
+            } catch (e) {
+                icon.classList.remove('spinning');
+                showToast('Impossible de vérifier le statut. Réessayez plus tard.');
+            }
+        }
+
+        // ── Logout ───────────────────────────────────────────────────────────────
+        function handleLogout() {
+            localStorage.removeItem('nebras_token');
+            localStorage.removeItem('nebras_user');
+            window.location.href = 'auth.html';
+        }
+
+        // ── Redirect by role ─────────────────────────────────────────────────────
+        function redirectByRole(userType) {
+            const routes = {
+                psychologue: 'psychologue_dashboard.html',
+                counselor: 'counselor_dashboard.html',
+                patient: 'patient_dashboard.html',
+                admin: 'admin_dashboard.html'
+            };
+            window.location.href = routes[userType] || 'auth.html';
+        }
+
+        // ── Simple toast ─────────────────────────────────────────────────────────
+        function showToast(msg) {
+            let t = document.getElementById('__toast');
+            if (!t) {
+                t = document.createElement('div');
+                t.id = '__toast';
+                Object.assign(t.style, {
+                    position: 'fixed', bottom: '30px', left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: '#091346', color: 'white',
+                    padding: '12px 24px', borderRadius: '10px',
+                    fontSize: '14px', fontWeight: '600',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                    zIndex: '9999', transition: 'opacity 0.3s',
+                    whiteSpace: 'nowrap'
+                });
+                document.body.appendChild(t);
+            }
+            t.textContent = msg;
+            t.style.opacity = '1';
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => { t.style.opacity = '0'; }, 3500);
+        }
+    </script>
+</body>
+
+</html>

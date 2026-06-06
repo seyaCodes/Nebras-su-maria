@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistiques - Admin | Nebras</title>
+    <link rel="stylesheet" href="./css/admin_style.css">
+    <link rel="icon" type="image/png" href="./assets/image/logo.png">
+</head>
+
+<body class="admin-stats-page">
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo">
+                <img src="./assets/image/logo.png" alt="Nebras Logo">
+            </div>
+            <nav class="nav-menu">
+                <a href="admin_dashboard.html" class="nav-item active">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-5v-7H9v7H5a2 2 0 0 1-2-2z" />
+                    </svg>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="admin_utilisateurs.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <span>Utilisateurs</span>
+                    <span class="badge" id="usersBadge"></span>
+                </a>
+                <a href="admin_validation.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>Validations</span>
+                    <span class="badge" id="validationsBadge"></span>
+                </a>
+                <a href="admin_paiements.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M16 8l-4 8-4-8" />
+                    </svg>
+                    <span>Paiements</span>
+                    <span class="badge" id="paymentsBadge"></span>
+                </a>
+                <a href="admin_statistiques.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12v3a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4v-3" />
+                        <path d="M12 2v12m0 0l-3-3m3 3l3-3" />
+                    </svg>
+                    <span>Statistiques</span>
+                </a>
+            </nav>
+
+            <!-- Profile + Settings + Logout -->
+            <div class="nav-item profile-link" style="display:flex;align-items:center;gap:8px;cursor:default;">
+                <a href="admin.html"
+                    style="display:flex;align-items:center;gap:8px;flex:1;text-decoration:none;color:inherit;min-width:0;">
+                    <div class="user-avatar">A</div>
+                    <div class="user-info" style="min-width:0;overflow:hidden;">
+                        <span class="user-name"
+                            style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Admin</span>
+                    </div>
+                </a>
+                <a href="admin.html" title="Paramètres"
+                    style="display:flex;align-items:center;justify-content:center;padding:6px;border-radius:8px;background:rgba(255,255,255,0.1);flex-shrink:0;text-decoration:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="18" height="18">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H5.78a1.65 1.65 0 0 0-1.51 1 1.65 1.65 0 0 0 .33 1.82l.08.1A10 10 0 0 0 12 18a10 10 0 0 0 6.33-2.2z" />
+                    </svg>
+                </a>
+                <a href="#" onclick="logout()" title="Déconnexion"
+                    style="display:flex;align-items:center;justify-content:center;padding:6px;border-radius:8px;background:rgba(231,76,60,0.15);flex-shrink:0;text-decoration:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" width="18" height="18">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16,17 21,12 16,7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <header class="page-header">
+                <div>
+                    <h1>Statistiques</h1>
+                    <p class="subtitle">Analyse détaillée de votre plateforme</p>
+                </div>
+                <div class="header-icons">
+                    <button class="icon-btn" onclick="exportStats()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"
+                            height="18">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <div class="stats-filters">
+                <div class="filter-group">
+                    <label>Période</label>
+                    <select class="filter-select" id="periodSelect" onchange="loadStats()">
+                        <option value="7d">7 derniers jours</option>
+                        <option value="30d" selected>30 derniers jours</option>
+                        <option value="3m">3 derniers mois</option>
+                        <option value="12m">12 derniers mois</option>
+                    </select>
+                </div>
+                <button class="action-btn primary" onclick="loadStats()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="14" height="14">
+                        <polygon points="22 3 2 3 10 13 10 21 14 18 14 13 22 3" />
+                    </svg> Appliquer
+                </button>
+            </div>
+
+            <section class="stats-kpi-grid" aria-label="Aperçu rapide">
+                <article class="stats-kpi-card">
+                    <p class="stats-kpi-label">Nouveaux inscrits</p>
+                    <p class="stats-kpi-value" id="kpiUsers">-</p>
+                    <p class="stats-kpi-meta">Total cumulé sur les 6 derniers mois</p>
+                </article>
+                <article class="stats-kpi-card">
+                    <p class="stats-kpi-label">Revenus période</p>
+                    <p class="stats-kpi-value" id="kpiRevenue">-</p>
+                    <p class="stats-kpi-meta">Total validé sur la période sélectionnée</p>
+                </article>
+                <article class="stats-kpi-card">
+                    <p class="stats-kpi-label">Rendez-vous semaine</p>
+                    <p class="stats-kpi-value" id="kpiAppointments">-</p>
+                    <p class="stats-kpi-meta">Somme des 7 derniers jours</p>
+                </article>
+                <article class="stats-kpi-card">
+                    <p class="stats-kpi-label">Top note pro</p>
+                    <p class="stats-kpi-value" id="kpiTopRating">-</p>
+                    <p class="stats-kpi-meta">Meilleure évaluation actuelle</p>
+                </article>
+            </section>
+
+            <div class="stats-chart">
+                <div class="chart-header">
+                    <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"
+                            height="18">
+                            <path d="M2 20L22 20" />
+                            <path d="M4 16L8 8L12 12L16 4L20 8" />
+                        </svg> Évolution des inscriptions</h3>
+                    <p class="chart-period" id="registrationPeriodText">6 derniers mois</p>
+                </div>
+                <div class="chart-line" id="registrationsChart"></div>
+                <div class="chart-legend">
+                    <span><span class="legend-color patients"></span> Patients</span>
+                    <span><span class="legend-color psychologues"></span> Psychologues</span>
+                    <span><span class="legend-color counselors"></span> Counselors</span>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stats-chart half">
+                    <div class="chart-header">
+                        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"
+                                height="18">
+                                <circle cx="12" cy="12" r="10" />
+                                <path
+                                    d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                            </svg> Répartition des utilisateurs</h3>
+                    </div>
+                    <div class="pie-chart-simple" id="distributionChart"></div>
+                    <div class="chart-legend" id="distributionLegend">
+                        <span class="legend-color patients-normaux"></span> Patients normaux
+                        <span class="legend-color patients-vip"></span> Patients VIP
+                        <span class="legend-color psychologues"></span> Psychologues
+                        <span class="legend-color" style="background:#9575CD;"></span> Counselors
+                    </div>
+                </div>
+
+                <div class="stats-chart half">
+                    <div class="chart-header">
+                        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"
+                                height="18">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M16 8l-4 8-4-8" />
+                            </svg> Revenus mensuels</h3>
+                    </div>
+                    <div class="bar-chart" id="revenueChart"></div>
+                </div>
+            </div>
+
+            <div class="stats-chart">
+                <div class="chart-header">
+                    <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"
+                            height="18">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg> Rendez-vous par jour</h3>
+                    <p class="chart-period" id="appointmentsPeriodText">7 derniers jours</p>
+                </div>
+                <div class="week-chart" id="appointmentsChart"></div>
+            </div>
+
+            <div class="admin-section">
+                <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" />
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    </svg> Top professionnels actifs</h2>
+                <p class="section-subtitle">Classement basé sur la note, le nombre de patients suivis et les revenus
+                    générés.</p>
+                <div class="table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Rang</th>
+                                <th>Professionnel</th>
+                                <th>Type</th>
+                                <th>Spécialité</th>
+                                <th>Patients</th>
+                                <th>Revenus</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topProfessionalsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/router.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/pages/admin.js"></script>
+</body>
+
+</html>

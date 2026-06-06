@@ -1,0 +1,369 @@
+// This is your Prisma schema file
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model VIPFormQuestion {
+  id        String   @id @default(cuid())
+  formId    String
+  order     Int
+  text      String
+  form      VIPForm  @relation(fields: [formId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model VIPFormResponse {
+  id            String   @id @default(uuid())
+  appointmentId String
+  patientId     String
+  doctorId      String
+  answers       String   @db.Text
+  createdAt     DateTime @default(now())
+}
+
+model VIPForm {
+  id            String            @id @default(cuid())
+  psychologueId String            @unique
+  psychologue   User              @relation(fields: [psychologueId], references: [id])
+  questions     VIPFormQuestion[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+// ============== USERS TABLE ==============
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  fullname  String
+  userType  String   @default("patient") // patient, psychologue, counselor, admin
+  status    String   @default("pending") // pending, active, suspended, rejected
+  createdAt DateTime @default(now())
+
+  // URGENT Access (7-day priority)
+  urgentAccessStart  DateTime?
+  urgentAccessExpiry DateTime?
+
+  // Real-time call state
+  currentCallId        String?
+  currentCallPartnerId String?
+  currentCallStartedAt DateTime?
+
+  // Relations
+  profile                      Profile?
+  appointmentsAsPatient        Appointment[]        @relation("PatientAppointments")
+  appointmentsAsDoctor         Appointment[]        @relation("DoctorAppointments")
+  reviewsAsPatient             Review[]             @relation("PatientReviews")
+  reviewsAsDoctor              Review[]             @relation("DoctorReviews")
+  groupSessionRatingsAsPatient GroupSessionRating[] @relation("PatientGroupSessionRatings")
+  groupSessionRatingsAsDoctor  GroupSessionRating[] @relation("DoctorGroupSessionRatings")
+  timeSlots                    TimeSlot[]
+  sentMessages                 Message[]            @relation("SentMessages")
+  receivedMessages             Message[]            @relation("ReceivedMessages")
+  groupMemberships             GroupMember[]
+  createdGroups                TherapyGroup[]       @relation("PsychologueGroups")
+  vipSubscriptions             VIPSubscription[]
+  vipForm                      VIPForm?
+  urgentRequestsAsPatient      UrgentRequest[]      @relation("PatientUrgentRequests")
+  urgentRequestsAsDoctor       UrgentRequest[]      @relation("DoctorUrgentRequests")
+
+  // Private notes from doctor to patient
+  patientNotesAsPatient PatientNote[] @relation("PatientPatientNotes")
+  patientNotesAsDoctor  PatientNote[] @relation("DoctorPatientNotes")
+
+  // Admin relations
+  validationRequest ValidationRequest?
+  adminValidations  ValidationRequest[] @relation("AdminValidationActions")
+  documents         Document[]
+  transactions      Transaction[]
+
+  @@index([userType, status])
+  @@index([createdAt])
+  @@index([status])
+}
+
+// ============== PROFILES TABLE ==============
+model Profile {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Avatar/Profile picture
+  avatar String? // URL or base64 string for profile picture
+
+  // Patient fields
+  birthDate DateTime?
+  gender    String?
+
+  // Doctor/Counselor fields
+  specialite  String?
+  universite  String?
+  bio         String?
+  rating      Decimal @default(0) @db.Decimal(3, 2)
+  isAvailable Boolean @default(true)
+
+  // Additional fields
+  phone    String?
+  adresse  String?
+  diplomes String?
+  agrement String?
+  tarif    Int?
+
+  // Denormalized counters (cached aggregates for performance)
+  sessionsCompleted Int @default(0)
+  patientsCount     Int @default(0)
+  reviewsCount      Int @default(0)
+
+  // Therapeutic preferences
+  language   String? // langue preferree
+  motifs     String? // motifs de consultation (stored as comma-separated)
+  prefGender String? // preference genre psychologue
+  prefType   String? // preference type consultation
+
+  @@index([rating])
+}
+
+// ============== APPOINTMENTS TABLE ==============
+model Appointment {
+  id              String   @id @default(uuid())
+  patientId       String
+  patient         User     @relation("PatientAppointments", fields: [patientId], references: [id])
+  doctorId        String
+  doctor          User     @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  appointmentDate DateTime
+  appointmentTime String // Store as "HH:MM" string
+  mediaType       String   @default("video") // video, phone, chat
+  status          String   @default("pending") // pending, confirmed, completed, cancelled
+  notes           String? // Session notes (doctor only)
+  createdAt       DateTime @default(now())
+
+  // Review / rating
+  review Review?
+
+  @@index([doctorId])
+  @@index([doctorId, status])
+  @@index([doctorId, patientId])
+  @@index([patientId])
+  @@index([appointmentDate])
+  @@index([doctorId, appointmentDate, status])
+}
+
+// ============== URGENT REQUESTS TABLE ==============
+model UrgentRequest {
+  id              String    @id @default(uuid())
+  patientId       String
+  patient         User      @relation("PatientUrgentRequests", fields: [patientId], references: [id])
+  doctorId        String?
+  doctor          User?     @relation("DoctorUrgentRequests", fields: [doctorId], references: [id])
+  status          String    @default("pending") // pending, accepted, rejected, completed
+  notes           String?
+  amount          Int       @default(1000) // 1000 DA
+  // VIP/URGENT flag (always true for now)
+  appointmentTime String? // Custom appointment time (HH:MM)
+  appointmentDate DateTime? // Custom appointment date
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ============== TIME SLOTS TABLE ==============
+model TimeSlot {
+  id        String  @id @default(uuid())
+  doctorId  String
+  doctor    User    @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  dayOfWeek Int // 0=Sunday, 1=Monday, ..., 6=Saturday (for weekly recurring)
+  startTime String // "09:00"
+  endTime   String // "10:00"
+  isBooked  Boolean @default(false)
+
+  // New fields for enhanced scheduling
+  specificDate DateTime? // Specific date for one-time slot (YYYY-MM-DD)
+  recurrence   String    @default("none") // 'none', 'daily', 'weekly', 'monthly'
+  isBlocked    Boolean   @default(false) // If true, this time is blocked/unavailable
+
+  @@unique([doctorId, dayOfWeek, startTime, specificDate])
+}
+
+// ============== REVIEWS / RATINGS TABLE ==============
+model Review {
+  id            String      @id @default(uuid())
+  patientId     String
+  patient       User        @relation("PatientReviews", fields: [patientId], references: [id])
+  doctorId      String
+  doctor        User        @relation("DoctorReviews", fields: [doctorId], references: [id])
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  rating        Int // 1-5 stars
+  comment       String?
+  createdAt     DateTime    @default(now())
+
+  @@unique([patientId, doctorId, appointmentId])
+  @@index([doctorId])
+}
+
+// ============== MESSAGES TABLE ==============
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+// ============== THERAPY GROUPS TABLE ==============
+model TherapyGroup {
+  id                  String   @id @default(uuid())
+  name                String
+  description         String
+  theme               String? // e.g., "Stress", "Anxiété", "Confiance en soi"
+  dayOfWeek           Int // 0=Sunday, 1=Monday, ..., 6=Saturday
+  time                String // "19:00"
+  duration            Int // minutes (e.g., 90)
+  maxParticipants     Int      @default(10)
+  currentParticipants Int      @default(0)
+  price               Int? // price per session in DA
+  icon                String   @default("group")
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+
+  // Link to psychologue who created this group
+  psychologueId String?
+  psychologue   User?   @relation("PsychologueGroups", fields: [psychologueId], references: [id], onDelete: SetNull)
+
+  members             GroupMember[]
+  groupSessionRatings GroupSessionRating[]
+
+  @@index([psychologueId])
+}
+
+// ============== GROUP MEMBERS TABLE ==============
+model GroupMember {
+  id       String       @id @default(uuid())
+  groupId  String
+  group    TherapyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status   String       @default("pending") // pending, accepted, rejected
+  joinedAt DateTime     @default(now())
+
+  @@unique([groupId, userId])
+}
+
+// ============== GROUP SESSION RATINGS TABLE ==============
+model GroupSessionRating {
+  id        String       @id @default(uuid())
+  patientId String
+  patient   User         @relation("PatientGroupSessionRatings", fields: [patientId], references: [id])
+  doctorId  String
+  doctor    User         @relation("DoctorGroupSessionRatings", fields: [doctorId], references: [id])
+  groupId   String
+  group     TherapyGroup @relation(fields: [groupId], references: [id])
+  rating    Int // 1-5 stars
+  comment   String?
+  createdAt DateTime     @default(now())
+
+  @@unique([patientId, doctorId, groupId])
+  @@index([doctorId])
+}
+
+// ============== VIP SUBSCRIPTION TABLE ==============
+model VIPSubscription {
+  id            String   @id @default(uuid())
+  psychologueId String
+  psychologue   User     @relation(fields: [psychologueId], references: [id], onDelete: Cascade)
+  plan          String // 'mensuel' or 'annuel'
+  price         Int
+  startDate     DateTime @default(now())
+  endDate       DateTime
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  @@index([isActive])
+}
+
+// ============== PATIENT NOTES TABLE ==============
+// Private notes taken by a psychologist/counselor about a specific patient
+model PatientNote {
+  id        String   @id @default(uuid())
+  doctorId  String
+  patientId String
+  content   String   @db.Text
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  doctor  User @relation("DoctorPatientNotes", fields: [doctorId], references: [id], onDelete: Cascade)
+  patient User @relation("PatientPatientNotes", fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ============== VALIDATION REQUESTS TABLE ==============
+model ValidationRequest {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            String // "psychologue" | "counselor"
+  specialite      String?
+  universite      String?
+  bio             String?
+  status          String   @default("pending") // pending, approved, rejected
+  adminId         String?
+  admin           User?    @relation("AdminValidationActions", fields: [adminId], references: [id])
+  rejectionReason String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============== DOCUMENTS TABLE ==============
+model Document {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  name       String // Display name
+  type       String // diplome, cv, carte_pro, certification
+  fileUrl    String // Path/URL to stored file
+  uploadedAt DateTime @default(now())
+}
+
+// ============== TRANSACTIONS TABLE ==============
+model Transaction {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  type          String // "consultation" | "vip_subscription"
+  amount        Int // Amount in DA
+  reference     String? // External payment reference (e.g., CCP-123456)
+  status        String    @default("pending") // pending, validated, rejected
+  validatedBy   String?
+  validatedAt   DateTime?
+  appointmentId String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([status, createdAt])
+}
+
+// ============== PLATFORM SETTINGS TABLE ==============
+model PlatformSettings {
+  id                 String   @id @default(uuid())
+  siteName           String   @default("Nebras")
+  contactEmail       String   @default("contact@nebras.dz")
+  phone              String   @default("+213 XXX XXX XXX")
+  consultationPrice  Int      @default(1000)
+  vipMonthlyPrice    Int      @default(5000)
+  platformCommission Int      @default(10)
+  updatedAt          DateTime @updatedAt
+  updatedBy          String?
+}

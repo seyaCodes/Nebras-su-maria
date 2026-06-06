@@ -1,0 +1,1 @@
+// Code moved to shared/doctor-vip.js — loaded before this file

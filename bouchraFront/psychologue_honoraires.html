@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Honoraires - Psychologue | Nebras</title>
+    <link rel="stylesheet" href="./css/psychologue_style.css">
+    <link rel="icon" type="image/png" href="./assets/image/logo.png">
+</head>
+
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo">
+                <img src="./assets/image/logo.png" alt="Nebras Logo">
+            </div>
+            <nav class="nav-menu">
+                <a href="psychologue_dashboard.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor" />
+                    </svg>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="psychologue_mes_patients.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"
+                            fill="currentColor" />
+                    </svg>
+                    <span>Mes patients</span>
+                    <span class="badge">0</span>
+                </a>
+                <a href="psychologue_emploi_du_temps.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"
+                            fill="currentColor" />
+                    </svg>
+                    <span>Emploi du temps</span>
+                </a>
+                <a href="psychologue_messagerie.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"
+                            fill="currentColor" />
+                    </svg>
+                    <span>Messagerie</span>
+                    <span class="badge">0</span>
+                </a>
+                <a href="psychologue_honoraires.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.5 15h-3v-2h3v2zm0-4h-3V7h3v6z"
+                            fill="currentColor" />
+                    </svg>
+                    <span>Honoraires</span>
+                </a>
+                <a href="psychologue_groupes.html" class="nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"
+                            fill="currentColor" />
+                    </svg>
+                    <span>Thérapie de groupe</span>
+                </a>
+                <a href="psychologue_VIP.html" class="nav-item vip-link" onclick="checkVIPStatus(event)">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15 9 22 9 16 14 19 22 12 17 5 22 8 14 2 9 9 9 12 2" />
+                    </svg>
+                    <span>Espace VIP</span>
+                    <span class="vip-status-badge" id="vipStatusBadge">Non activé</span>
+                </a>
+                <a href="psychologue_analytics.html" class="nav-item" id="analyticsNavItem">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 20V10M12 20V4M6 20v-6" />
+                    </svg>
+                    <span>Analytics</span>
+                    <span
+                        style="background:#c5b4e4;color:white;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:4px;">VIP</span>
+                </a>
+            </nav>
+
+            <!-- Profile + Settings + Logout -->
+            <div class="nav-item profile-link" style="display:flex;align-items:center;gap:8px;cursor:default;">
+                <a href="psychologue_profil.html"
+                    style="display:flex;align-items:center;gap:8px;flex:1;text-decoration:none;color:inherit;min-width:0;">
+                    <div class="user-avatar" id="sidebarAvatar"></div>
+                    <div class="user-info" style="min-width:0;overflow:hidden;">
+                        <span class="user-name" id="sidebarUserName"
+                            style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Dr.</span>
+                    </div>
+                </a>
+                <a href="psychologue_profil.html" title="Paramètres"
+                    style="display:flex;align-items:center;justify-content:center;padding:6px;border-radius:8px;background:rgba(255,255,255,0.1);flex-shrink:0;text-decoration:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="18" height="18">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H5.78a1.65 1.65 0 0 0-1.51 1 1.65 1.65 0 0 0 .33 1.82l.08.1A10 10 0 0 0 12 18a10 10 0 0 0 6.33-2.2z" />
+                    </svg>
+                </a>
+                <a href="#" onclick="logout()" title="Déconnexion"
+                    style="display:flex;align-items:center;justify-content:center;padding:6px;border-radius:8px;background:rgba(231,76,60,0.15);flex-shrink:0;text-decoration:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" width="18" height="18">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16,17 21,12 16,7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+        <div class="main-content">
+            <header class="page-header">
+                <div>
+                    <h1>Honoraires</h1>
+                    <p class="subtitle">Gérez vos revenus et transactions</p>
+                </div>
+            </header>
+
+            <!-- Résumé des honoraires -->
+            <div class="honoraires-summary">
+                <div class="honoraire-card">
+                    <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16"
+                            height="16">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M16 8l-4 8-4-8" />
+                        </svg> Revenus totaux</h3>
+                    <div class="amount">125 000 DA</div><small>Ce mois-ci</small>
+                </div>
+                <div class="honoraire-card">
+                    <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16"
+                            height="16">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 6v6l4 2" />
+                        </svg> En attente</h3>
+                    <div class="amount">15 000 DA</div><small>Paiements en cours</small>
+                </div>
+                <div class="honoraire-card">
+                    <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16"
+                            height="16">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg> Payés</h3>
+                    <div class="amount">110 000 DA</div><small>Reçus ce mois</small>
+                </div>
+            </div>
+
+            <!-- Tarif consultation -->
+            <div class="dashboard-section">
+                <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20"
+                        height="20">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M16 8l-4 8-4-8" />
+                    </svg> Tarif consultation</h2>
+                <div
+                    style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+                    <div id="tarifContainer">
+                        <p id="tarifAmount" style="font-size: 24px; font-weight: bold; color: #44AA99;">- DA</p>
+                        <p>par séance (45 minutes)</p>
+                    </div>
+                    <button class="link-btn" onclick="openTarifModal()" style="width: auto; padding: 10px 25px;"><svg
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14"
+                            height="14">
+                            <path d="M17 3l4 4-7 7H10v-4l7-7z" />
+                            <path d="M3 21h18" />
+                        </svg> Modifier le tarif</button>
+                </div>
+            </div>
+
+            <!-- Transactions récentes -->
+            <div class="dashboard-section">
+                <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20"
+                        height="20">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                        <line x1="8" y1="21" x2="16" y2="21" />
+                        <line x1="12" y1="17" x2="12" y2="21" />
+                    </svg> Transactions récentes</h2>
+                <div id="recentTransactionsList" class="transactions-list">
+                    <div class="empty-state" style="padding: 20px; text-align: center; color: #888;">Chargement...</div>
+                </div>
+            </div>
+
+            <!-- Paiements à venir -->
+            <div class="dashboard-section">
+                <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20"
+                        height="20">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg> Paiements à venir</h2>
+                <div id="upcomingPaymentsList" class="transactions-list">
+                    <div class="empty-state" style="padding: 20px; text-align: center; color: #888;">Chargement...</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="tarifModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 400px; width: 90%;">
+            <h3 style="margin-bottom: 20px; color: #091346;">Modifier le tarif de consultation</h3>
+            <p style="margin-bottom: 15px; color: #666;">Entrez le nouveau tarif par séance:</p>
+            <input type="number" id="newTarifInput"
+                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 8px;"
+                placeholder="Entre 1000 et 5000 DA" min="1000" max="5000">
+            <p style="font-size: 12px; color: #999; margin-bottom: 20px;">Min: 1 000 DA — Max: 5 000 DA</p>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button onclick="closeTarifModal()"
+                    style="padding: 10px 20px; border: 1px solid #ddd; background: white; border-radius: 8px; cursor: pointer;">Annuler</button>
+                <button onclick="saveTarif()"
+                    style="padding: 10px 20px; background: #44AA99; color: white; border: none; border-radius: 8px; cursor: pointer;">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+    <script src="js/guard.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/shared/doctor-honoraires.js"></script>
+    <script src="js/psychologue_honoraires.js" defer></script>
+</body>
+
+</html>

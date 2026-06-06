@@ -1,0 +1,439 @@
+// ============================================
+// PATIENT CALL LISTENER (Shared across all patient pages)
+// ============================================
+(function () {
+
+    window.PatientCallState = {
+        currentDoctorId: null,
+        activeCallData: null,
+        callStatus: null
+    };
+
+    let callCheckInterval = null;
+    let lastCallActive = false;
+    let lastCallStatus = null;
+    let patientCallListenerInitialized = false;
+    let sessionSocket = null;
+    const callPollIntervalMs = 2000;
+    let callStatusRequestInFlight = false;
+    const socketUrl = window.API_URL.replace('/api', '');
+
+    // Rating deduplication — prevents showing the group rating modal more than once per session
+    function getSessionRatingKey(groupId, doctorId) {
+        const user = getCurrentUser();
+        const patientId = user?.id || 'unknown';
+        return `group_rated_${groupId}_${doctorId}_${patientId}`;
+    }
+
+    function isSessionRated(groupId, doctorId) {
+        return !!sessionStorage.getItem(getSessionRatingKey(groupId, doctorId));
+    }
+
+    function markSessionRated(groupId, doctorId) {
+        sessionStorage.setItem(getSessionRatingKey(groupId, doctorId), '1');
+    }
+
+    function initPatientCallListener() {
+        if (patientCallListenerInitialized) return;
+        patientCallListenerInitialized = true;
+
+        const userType = typeof getUserType === 'function'
+            ? getUserType()
+            : localStorage.getItem('userType');
+
+        if (userType !== 'patient') return;
+
+        // Initialize Socket.io for real-time updates
+        initSessionSocket();
+
+        // Start polling as initial fallback (stopped if socket connects)
+        startCallPolling();
+        window.addEventListener('storage', handleStorageChange);
+
+        checkCallStatus();
+    }
+
+    function initSessionSocket() {
+        if (sessionSocket) return;
+
+        const user = getCurrentUser();
+        if (!user || !user.id) return;
+
+        // Check if socket.io is available
+        if (typeof io !== 'undefined') {
+            const token = localStorage.getItem('nebras_token');
+            if (!token) return;
+
+            sessionSocket = io(socketUrl, {
+                transports: ['websocket', 'polling'],
+                auth: { token },
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000
+            });
+
+            sessionSocket.on('connect', () => {
+                console.log('Session socket connected');
+                // Join patient room for real-time events
+                sessionSocket.emit('join-patient-room', user.id);
+                // Stop polling — socket provides real-time updates
+                if (callCheckInterval) {
+                    clearInterval(callCheckInterval);
+                    callCheckInterval = null;
+                }
+            });
+
+            sessionSocket.on('session-started', (data) => {
+                console.log('Real-time session started event:', data);
+                window.PatientCallState.currentDoctorId = data.doctorId;
+                window.PatientCallState.activeCallData = data;
+                localStorage.setItem('currentDoctorId', data.doctorId);
+                checkCallStatus();
+            });
+
+            sessionSocket.on('session-ended', (data) => {
+                console.log('Real-time session ended event:', data);
+                window.PatientCallState.currentDoctorId = null;
+                window.PatientCallState.activeCallData = null;
+                localStorage.removeItem('currentDoctorId');
+
+                if (lastCallActive) {
+                    handleCallEnded();
+                }
+                lastCallActive = false;
+                lastCallStatus = null;
+
+                const callEntry = document.getElementById('patientCallEntry');
+                if (callEntry) callEntry.remove();
+            });
+
+            // Doctor accepted patient into the group call
+            sessionSocket.on('group:join-accepted', (data) => {
+                console.log('Group join accepted:', data);
+                if (typeof showToast === 'function') {
+                    showToast('Vous avez été accepté dans le groupe', 'success');
+                }
+                sessionStorage.setItem('groupCallRoom', data.roomId);
+                sessionStorage.setItem('groupCallGroupId', data.groupId);
+                sessionStorage.setItem('groupCallDoctorId', data.doctorId);
+                sessionStorage.setItem('groupCallDoctorName', data.doctorName || 'Psychologue');
+                showGroupCallEntry(data);
+            });
+
+            // Doctor rejected patient's group join request
+            sessionSocket.on('group:join-rejected', (data) => {
+                console.log('Group join rejected:', data);
+                if (typeof showToast === 'function') {
+                    showToast('Votre demande d\'adhésion au groupe a été refusée', 'error');
+                }
+                window.dispatchEvent(new CustomEvent('grouptherapy:data-changed', { detail: data }));
+            });
+
+            // Group session ended
+            sessionSocket.on('group:ended', (data) => {
+                console.log('Group ended:', data);
+                window.removeGroupCallEntry();
+                if (!isSessionRated(data.groupId, data.doctorId)) {
+                    try {
+                        sessionStorage.setItem('pendingGroupRating', JSON.stringify({
+                            doctorId: data.doctorId,
+                            doctorName: data.doctorName || 'Psychologue',
+                            groupId: data.groupId
+                        }));
+                    } catch (e) { }
+                }
+                if (data.disconnect) {
+                    if (typeof showToast === 'function') {
+                        showToast('La session de groupe est terminée', 'info');
+                    }
+                    sessionStorage.removeItem('groupCallRoom');
+                    sessionStorage.removeItem('groupCallGroupId');
+                    sessionStorage.removeItem('groupCallDoctorId');
+                }
+                if (typeof handleGroupSessionEnded === 'function') {
+                    handleGroupSessionEnded(data);
+                }
+                window.dispatchEvent(new CustomEvent('grouptherapy:session-ended', { detail: data }));
+            });
+
+            // Group data changed
+            sessionSocket.on('group-data-changed', (data) => {
+                console.log('Group data changed:', data);
+                window.dispatchEvent(new CustomEvent('grouptherapy:data-changed', { detail: data }));
+            });
+
+            sessionSocket.on('disconnect', () => {
+                console.log('Session socket disconnected');
+                startCallPolling();
+            });
+
+            sessionSocket.on('connect_error', (error) => {
+                console.log('❌ Session socket connection error:', error.message);
+            });
+        } else {
+            console.log('Socket.io not available, using polling only');
+        }
+    }
+
+    function startCallPolling() {
+        if (callCheckInterval) clearInterval(callCheckInterval);
+        callCheckInterval = setInterval(() => {
+            checkCallStatus();
+        }, 5000);
+    }
+
+    function handleStorageChange(event) {
+        if (event.key === 'doctorInCall' || event.key === 'currentCallAppointment' || event.key === 'nebras_user') {
+            checkCallStatus();
+        }
+    }
+
+    async function checkCallStatus() {
+        if (callStatusRequestInFlight) return;
+
+        try {
+            callStatusRequestInFlight = true;
+            let status = null;
+
+            if (appointmentAPI?.getMyCallStatus) {
+                status = await appointmentAPI.getMyCallStatus();
+            } else if (appointmentAPI?.getCallStatus && window.PatientCallState.currentDoctorId) {
+                status = await appointmentAPI.getCallStatus(window.PatientCallState.currentDoctorId);
+            } else if (doctorAPI?.getCallStatus && window.PatientCallState.currentDoctorId) {
+                status = await doctorAPI.getCallStatus(window.PatientCallState.currentDoctorId);
+            }
+
+            if (status) updateCallEntryUI(status);
+        } catch (error) {
+            console.log('Call status check failed');
+        } finally {
+            callStatusRequestInFlight = false;
+        }
+    }
+
+    function updateCallEntryUI(status) {
+        let callEntry = document.getElementById('patientCallEntry');
+
+        if (status.inCall && status.appointmentId) {
+            lastCallActive = true;
+            lastCallStatus = status;
+
+            if (status.doctorId) {
+                window.PatientCallState.currentDoctorId = status.doctorId;
+                localStorage.setItem('currentDoctorId', status.doctorId);
+            }
+
+            if (!callEntry) {
+                callEntry = createCallEntryElement();
+                insertCallEntry(callEntry);
+            } else {
+                ensureCallEntryMarkup(callEntry);
+                attachCallEntryEvents(callEntry);
+            }
+            updateCallEntryContent(callEntry, status);
+        } else {
+            if (lastCallActive) handleCallEnded();
+            if (callEntry) callEntry.remove();
+            lastCallActive = false;
+            window.PatientCallState.currentDoctorId = null;
+            localStorage.removeItem('currentDoctorId');
+        }
+    }
+
+    function createCallEntryElement() {
+        const div = document.createElement('div');
+        div.id = 'patientCallEntry';
+        div.className = 'call-entry-sidebar';
+        div.setAttribute('role', 'button');
+        div.setAttribute('tabindex', '0');
+        ensureCallEntryMarkup(div);
+        attachCallEntryEvents(div);
+        return div;
+    }
+
+    function ensureCallEntryMarkup(callEntry) {
+        const hasIcon = callEntry.querySelector('.call-entry-icon svg');
+        if (hasIcon) return;
+
+        callEntry.innerHTML = `
+        <div class="call-entry-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                <polygon points="23 7 16 12 23 17 23 7"></polygon>
+            </svg>
+        </div>
+        <div class="call-entry-content">
+            <span class="call-entry-title">Appel en cours</span>
+            <span class="call-entry-doctor">avec le Psychologue</span>
+        </div>
+        <button class="call-entry-btn" type="button">Rejoindre</button>
+    `;
+    }
+
+    function attachCallEntryEvents(callEntry) {
+        if (callEntry.dataset.bound === 'true') return;
+        callEntry.dataset.bound = 'true';
+
+        callEntry.addEventListener('click', function (event) {
+            const btn = event.target.closest('.call-entry-btn');
+            if (btn || event.currentTarget === event.target) {
+                event.preventDefault();
+                joinDoctorCall();
+            }
+        });
+
+        callEntry.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                joinDoctorCall();
+            }
+        });
+    }
+
+    function insertCallEntry(callEntry) {
+        const navMenu = document.querySelector('.nav-menu');
+        if (navMenu) {
+            const firstItem = navMenu.querySelector('.nav-item');
+            if (firstItem) {
+                navMenu.insertBefore(callEntry, firstItem);
+            } else {
+                navMenu.appendChild(callEntry);
+            }
+            return;
+        }
+
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.appendChild(callEntry);
+    }
+
+    function updateCallEntryContent(callEntry, status) {
+        const doctorName = status.doctorName || 'le Psychologue';
+        const doctorEl = callEntry.querySelector('.call-entry-doctor');
+        if (doctorEl) doctorEl.textContent = `avec ${doctorName}`;
+    }
+
+    // ========== GROUP CALL SIDEBAR ENTRY ==========
+    window.showGroupCallEntry = function (data) {
+        window.removeGroupCallEntry();
+
+        const safeDoctorName = (data.doctorName || 'Psychologue').replace(/[<>&"]/g, function (c) {
+            return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c];
+        });
+        const joinUrl = `video-call.html?room=${data.roomId || ''}&type=group&groupId=${data.groupId || ''}&doctorId=${data.doctorId || ''}`;
+
+        const invite = document.createElement('div');
+        invite.id = 'patientGroupCallInvite';
+        invite.className = 'group-call-invite';
+        invite.innerHTML = `
+        <div class="group-call-invite-card">
+            <div class="group-call-invite-head">
+                <div class="group-call-dot"></div>
+                <strong>Invitation appel de groupe</strong>
+            </div>
+            <div class="group-call-invite-body">
+                <span>${safeDoctorName} vous invite à rejoindre la séance.</span>
+            </div>
+            <div class="group-call-invite-actions">
+                <button type="button" class="group-call-btn group-call-btn-secondary" id="dismissGroupInviteBtn">Plus tard</button>
+                <button type="button" class="group-call-btn group-call-btn-primary" id="joinGroupInviteBtn">Rejoindre</button>
+            </div>
+        </div>
+    `;
+
+        document.body.appendChild(invite);
+        requestAnimationFrame(() => invite.classList.add('active'));
+
+        const showPill = function () {
+            let pill = document.getElementById('patientGroupCallPill');
+            if (!pill) {
+                pill = document.createElement('button');
+                pill.id = 'patientGroupCallPill';
+                pill.className = 'group-call-pill';
+                pill.type = 'button';
+                pill.innerHTML = '<span>Appel de groupe en attente</span>';
+                pill.addEventListener('click', function () {
+                    window.location.href = joinUrl;
+                });
+                document.body.appendChild(pill);
+            }
+        };
+
+        invite.querySelector('#joinGroupInviteBtn')?.addEventListener('click', function () {
+            window.location.href = joinUrl;
+        });
+
+        invite.querySelector('#dismissGroupInviteBtn')?.addEventListener('click', function () {
+            invite.classList.remove('active');
+            setTimeout(() => invite.remove(), 180);
+            showPill();
+        });
+    };
+
+    window.removeGroupCallEntry = function () {
+        const invite = document.getElementById('patientGroupCallInvite');
+        const pill = document.getElementById('patientGroupCallPill');
+        if (invite) invite.remove();
+        if (pill) pill.remove();
+    };
+
+    window.joinDoctorCall = async function () {
+        try {
+            let status = lastCallStatus;
+
+            if (!status || !status.inCall) {
+                status = appointmentAPI?.getMyCallStatus
+                    ? await appointmentAPI.getMyCallStatus()
+                    : (window.PatientCallState.currentDoctorId && appointmentAPI?.getCallStatus)
+                        ? await appointmentAPI.getCallStatus(window.PatientCallState.currentDoctorId)
+                        : null;
+            }
+
+            if (status?.inCall && status.appointmentId) {
+                const roomId = status.appointmentId;
+                window.location.href = `video-call.html?room=${roomId}&appointment=${status.appointmentId}&type=patient`;
+                return;
+            }
+
+            if (typeof showToast === 'function') {
+                showToast('La consultation n\'est plus disponible', 'error');
+            }
+        } catch (e) {
+            console.log('Join call failed:', e);
+            if (typeof showToast === 'function') {
+                showToast('Impossible de rejoindre la consultation', 'error');
+            }
+        }
+    };
+
+    function handleCallEnded() {
+        if (typeof leavePatientSession === 'function') {
+            leavePatientSession();
+        }
+
+        const activeSessionSection = document.getElementById('activeSessionSection');
+        if (activeSessionSection) activeSessionSection.style.display = 'none';
+
+        sessionStorage.removeItem('joinCall');
+        sessionStorage.removeItem('joinCallDoctorId');
+
+        if (typeof showToast === 'function') {
+            showToast('La consultation est terminee', 'info');
+        }
+
+        lastCallStatus = null;
+    }
+
+    // Expose for router SPA navigation
+    window.initPatientCallListener = initPatientCallListener;
+    window.initPage = initPatientCallListener;
+
+    if (typeof module !== 'undefined') module.exports = { initPatientCallListener };
+
+    // Auto-run on first hard load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPatientCallListener);
+    } else {
+        initPatientCallListener();
+    }
+
+})();

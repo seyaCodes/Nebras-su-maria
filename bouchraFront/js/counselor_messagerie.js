@@ -1,0 +1,1 @@
+// Code moved to shared/doctor-messagerie.js — loaded before this file

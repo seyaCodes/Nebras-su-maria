@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nebras - Authentification</title>
+    <link rel="stylesheet" href="./css/hom.css" />
+    <link rel="icon" type="image" href="./assets/image/logo.png">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="stylesheet" href="./css/pwa.css" />
+</head>
+
+<body>
+    <div class="header">
+        <div class="logo">
+            <img src="./assets/image/logo.png" alt="Nebras Logo" />
+        </div>
+        <div class="nav-links">
+            <a href="home.html">Accueil</a>
+            <a href="rule.html">Règles</a>
+            <a href="#etapes">Étapes</a>
+            <a href="#psychologues">Psychologues</a>
+            <a href="#Nos offres">Nos offres</a>
+        </div>
+        <div class="button-group">
+            <button onclick="goToHome()" class="btn-signin">Accueil</button>
+        </div>
+    </div>
+
+    <div class="auth-box">
+        <div id="login" class="form active">
+            <h2>Connexion</h2>
+            <input type="email" id="loginEmail" placeholder="Email" class="input">
+            <div style="position:relative;">
+                <input type="password" id="loginPassword" placeholder="Mot de passe" class="input" style="padding-right:40px;">
+                <span onclick="togglePwd('loginPassword',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;user-select:none;font-size:18px;">👁</span>
+            </div>
+            <button class="btn" onclick="handleLogin()">Se connecter</button>
+            <p>Pas de compte ? <a href="#" onclick="showRegister(); return false;">S'inscrire</a></p>
+        </div>
+
+        <div id="register" class="form">
+            <h2>Inscription</h2>
+            <select id="regUserType" class="input">
+                <option value="patient">Patient</option>
+                <option value="psychologue">Psychologue</option>
+                <option value="counselor">Counselor</option>
+            </select>
+            <input type="text" id="regFullname" placeholder="Nom complet" class="input">
+            <input type="email" id="regEmail" placeholder="Email" class="input">
+            <div style="position:relative;">
+                <input type="password" id="regPassword" placeholder="Mot de passe" class="input" style="padding-right:40px;">
+                <span onclick="togglePwd('regPassword',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;user-select:none;font-size:18px;">👁</span>
+            </div>
+            <div style="position:relative;">
+                <input type="password" id="regConfirmPassword" placeholder="Confirmer le mot de passe" class="input" style="padding-right:40px;">
+                <span onclick="togglePwd('regConfirmPassword',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;user-select:none;font-size:18px;">👁</span>
+            </div>
+
+            <!-- Doctor fields — shown only for psychologue/counselor -->
+            <div id="doctorFields" style="display:none;">
+                <input type="text" id="regAgrement" placeholder="Numéro d'agrément" class="input"
+                    style="margin-top: 10px;">
+                <div style="margin-top: 10px;">
+                    <label style="font-size: 13px; color: #666; display: block; margin-bottom: 6px;">
+                        Certificat / Diplôme (PDF ou image)
+                    </label>
+                    <input type="file" id="regCertificate" accept=".pdf,.jpg,.jpeg,.png" class="input"
+                        style="padding: 8px; font-size: 13px;">
+                </div>
+            </div>
+
+            <div class="check-box">
+                <input type="checkbox" id="rules">
+                <label for="rules">J'accepte les <a href="rule.html">règles</a> du site</label>
+            </div>
+            <button class="btn" onclick="handleRegister()">S'inscrire</button>
+            <p>Déjà un compte ? <a href="#" onclick="showLogin(); return false;">Se connecter</a></p>
+        </div>
+    </div>
+
+
+    <footer>
+        <p>&copy; <span id="currentYear"></span> Nebras - Psychologie en ligne</p>
+    </footer>
+
+    <script>
+        function togglePwd(id, el) {
+            var input = document.getElementById(id);
+            input.type = input.type === 'password' ? 'text' : 'password';
+            el.style.opacity = input.type === 'text' ? '0.5' : '1';
+        }
+    </script>
+    <script src="js/version.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/pages/auth.js"></script>
+    <script src="js/pwa.js"></script>
+</body>
+
+</html>
