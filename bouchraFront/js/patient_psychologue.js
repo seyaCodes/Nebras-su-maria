@@ -1326,7 +1326,11 @@
         if (btn) { btn.disabled = true; btn.textContent = 'Envoi...'; }
 
         try {
-            await appointmentAPI.createUrgent(selectedDoctor.id, 'Consultation urgente immédiate');
+            const result = await appointmentAPI.createUrgent(selectedDoctor.id, 'Consultation urgente immédiate');
+            const urgentId = result?.urgentRequest?.id;
+            if (urgentId) {
+                localStorage.setItem('pendingUrgentPaymentId', urgentId);
+            }
             if (typeof showToast === 'function') showToast('Demande envoyée ! En attente de réponse du praticien...', 'info');
             if (btn) { btn.textContent = 'Demande envoyée...'; }
         } catch (err) {

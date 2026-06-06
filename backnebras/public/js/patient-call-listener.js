@@ -33,6 +33,8 @@
         sessionStorage.setItem(getSessionRatingKey(groupId, doctorId), '1');
     }
 
+    let urgentPaymentPollInterval = null;
+
     function initPatientCallListener() {
         if (patientCallListenerInitialized) return;
         patientCallListenerInitialized = true;
@@ -51,6 +53,36 @@
         window.addEventListener('storage', handleStorageChange);
 
         checkCallStatus();
+
+        // Poll for urgent payment status as a reliable fallback to the socket event
+        checkPendingUrgentPayment();
+        urgentPaymentPollInterval = setInterval(checkPendingUrgentPayment, 5000);
+    }
+
+    async function checkPendingUrgentPayment() {
+        const pendingId = localStorage.getItem('pendingUrgentPaymentId');
+        if (!pendingId) return;
+
+        // Don't re-show if modal is already visible
+        if (document.getElementById('urgentPaymentModal')) return;
+
+        try {
+            const requests = await appointmentAPI.getUrgentRequests();
+            const list = Array.isArray(requests) ? requests : [];
+            const match = list.find(r => r.id === pendingId && r.status === 'accepted');
+            if (match) {
+                showUrgentPaymentModal({
+                    urgentId: match.id,
+                    amount: match.amount || 2000,
+                    doctorName: match.doctor?.fullname || 'le praticien'
+                });
+            } else if (list.find(r => r.id === pendingId && (r.status === 'in_call' || r.status === 'rejected' || r.status === 'completed'))) {
+                // Request is no longer waiting — stop polling
+                localStorage.removeItem('pendingUrgentPaymentId');
+            }
+        } catch (e) {
+            // Silent fail — polling is a background fallback
+        }
     }
 
     function initSessionSocket() {
@@ -450,6 +482,7 @@
 
             try {
                 const result = await appointmentAPI.payUrgent(data.urgentId, ccp);
+                localStorage.removeItem('pendingUrgentPaymentId');
                 if (typeof showToast === 'function') {
                     showToast('Paiement enregistré ! L\'appel va démarrer.', 'success');
                 }
