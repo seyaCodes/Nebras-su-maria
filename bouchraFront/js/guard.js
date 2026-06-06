@@ -16,7 +16,7 @@ document.documentElement.style.visibility = 'hidden';
         });
         const data = await res.json();
 
-        if (!data.user) { window.location.href = 'auth.html'; return; }
+        if (!res.ok || !data.user) { localStorage.clear(); window.location.href = 'auth.html'; return; }
 
         localStorage.setItem('nebras_user', JSON.stringify(data.user));
 
