@@ -637,6 +637,74 @@
         }
     }
 
+    function renderStarsReadonly(rating) {
+        return [1,2,3,4,5].map(i =>
+            `<span style="color:${i <= rating ? '#f59e0b' : '#d1d5db'};font-size:16px;">★</span>`
+        ).join('');
+    }
+
+    async function loadReviews() {
+        const user = getCurrentUser();
+        if (!user) return;
+
+        const summaryEl = document.getElementById('reviewsSummary');
+        const listEl = document.getElementById('reviewsList');
+        if (!summaryEl || !listEl) return;
+
+        summaryEl.innerHTML = '<span style="color:#888;font-size:13px;">Chargement...</span>';
+        listEl.innerHTML = '';
+
+        try {
+            const { reviews } = await reviewAPI.getForDoctor(user.id);
+
+            if (!reviews || reviews.length === 0) {
+                summaryEl.innerHTML = '<span style="color:#888;font-size:14px;">Aucun avis pour le moment.</span>';
+                return;
+            }
+
+            const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+            const dist = [5,4,3,2,1].map(n => ({ n, count: reviews.filter(r => r.rating === n).length }));
+
+            summaryEl.innerHTML = `
+                <div style="text-align:center;min-width:80px;">
+                    <div style="font-size:40px;font-weight:700;color:#1a1a2e;line-height:1;">${avg.toFixed(1)}</div>
+                    <div style="margin:4px 0;">${renderStarsReadonly(Math.round(avg))}</div>
+                    <div style="color:#888;font-size:12px;">${reviews.length} avis</div>
+                </div>
+                <div style="flex:1;">
+                    ${dist.map(d => `
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                        <span style="color:#888;font-size:12px;width:12px;">${d.n}</span>
+                        <span style="color:#f59e0b;font-size:12px;">★</span>
+                        <div style="flex:1;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;">
+                            <div style="height:100%;background:#f59e0b;width:${reviews.length ? (d.count/reviews.length*100) : 0}%;border-radius:3px;"></div>
+                        </div>
+                        <span style="color:#888;font-size:12px;width:16px;">${d.count}</span>
+                    </div>`).join('')}
+                </div>`;
+
+            listEl.innerHTML = reviews.map(r => {
+                const name = r.patient?.fullname || 'Patient';
+                const initial = name.charAt(0).toUpperCase();
+                const date = new Date(r.createdAt).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+                return `
+                <div style="border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:12px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                        <div style="width:36px;height:36px;border-radius:50%;background:#7c3aed;color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0;">${initial}</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:600;font-size:14px;color:#1a1a2e;">${name}</div>
+                            <div style="font-size:12px;color:#888;">${date}</div>
+                        </div>
+                        <div>${renderStarsReadonly(r.rating)}</div>
+                    </div>
+                    ${r.comment ? `<p style="margin:0;font-size:13px;color:#444;line-height:1.5;">${r.comment}</p>` : ''}
+                </div>`;
+            }).join('');
+        } catch (e) {
+            summaryEl.innerHTML = '<span style="color:#e74c3c;font-size:13px;">Erreur de chargement des avis.</span>';
+        }
+    }
+
     function showTab(tabName) {
         document.querySelectorAll('.profile-tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -644,6 +712,7 @@
         const tabMap = {
             'profil': 'tabProfil',
             'statut': 'tabStatut',
+            'avis': 'tabAvis',
             'securite': 'tabSecurite'
         };
 
@@ -657,6 +726,8 @@
                     btn.classList.add('active');
                 }
             });
+
+            if (tabName === 'avis') loadReviews();
         }
     }
 

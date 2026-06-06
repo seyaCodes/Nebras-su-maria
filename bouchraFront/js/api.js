@@ -730,6 +730,9 @@ const reviewAPI = {
       method: 'POST',
       body: JSON.stringify(data)
     });
+  },
+  getForDoctor: async (doctorId) => {
+    return fetchAPI(`/reviews/doctor/${doctorId}`);
   }
 };
 

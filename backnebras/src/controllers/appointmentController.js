@@ -268,6 +268,9 @@ exports.getMyAppointments = asyncHandler(async (req, res) => {
           fullname: true,
           profile: { select: { birthDate: true, gender: true } }
         }
+      },
+      review: {
+        select: { id: true, rating: true }
       }
     },
     orderBy: { appointmentDate: 'asc' }
@@ -290,6 +293,7 @@ exports.getMyAppointments = asyncHandler(async (req, res) => {
       fullname: apt.patient.fullname,
       gender: apt.patient.profile?.gender
     },
+    review: apt.review || null,
     createdAt: apt.createdAt
   }));
 
