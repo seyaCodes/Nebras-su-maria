@@ -85,24 +85,10 @@ initVideoSignaling(io, app);
 // ============================================
 // SERVE FRONTEND STATIC FILES
 // ============================================
-app.use(express.static(path.join(__dirname, "../../public")));
+app.use(express.static(path.join(__dirname, '../public')));
 // ============================================
 // API ROUTES
 // ============================================
-
-// Home route - Test if server is running
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Nebras API is running!',
-    version: '1.0.0',
-    endpoints: {
-      auth: '/api/auth',
-      doctors: '/api/doctors',
-      appointments: '/api/appointments',
-      messages: '/api/messages'
-    }
-  });
-});
 
 // Mount routes
 app.use('/api/auth', authRoutes);
