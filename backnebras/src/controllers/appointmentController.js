@@ -704,6 +704,24 @@ exports.payUrgentRequest = asyncHandler(async (req, res) => {
     data: { status: 'in_call' }
   });
 
+  // Set call state on both users so getMyCallStatus() returns inCall:true
+  await prisma.user.update({
+    where: { id: urgentRequest.doctorId },
+    data: {
+      currentCallId: appointment.id,
+      currentCallPartnerId: patientId,
+      currentCallStartedAt: new Date()
+    }
+  });
+  await prisma.user.update({
+    where: { id: patientId },
+    data: {
+      currentCallId: appointment.id,
+      currentCallPartnerId: urgentRequest.doctorId,
+      currentCallStartedAt: new Date()
+    }
+  });
+
   const roomId = appointment.id;
 
   if (global.io) {
